@@ -4,6 +4,7 @@ class SudokuAccessoriser {
         this.puzzleData = null;
         this.customizations = {};
         
+        this.initializeTheme();
         this.initializeEventListeners();
     }
 
@@ -15,6 +16,9 @@ class SudokuAccessoriser {
         // Navigation buttons
         document.getElementById('back-to-url').addEventListener('click', () => this.showStep(1));
         document.getElementById('preview-puzzle').addEventListener('click', () => this.openCustomizedPuzzle());
+        
+        // Theme toggle
+        document.getElementById('theme-toggle').addEventListener('click', () => this.toggleTheme());
     }
 
     async handleUrlSubmit(e) {
@@ -259,6 +263,38 @@ class SudokuAccessoriser {
 
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    initializeTheme() {
+        // Check for saved theme preference or default to browser preference
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+        this.setTheme(theme);
+        
+        // Listen for browser theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                this.setTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+    }
+
+    toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        this.setTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+    }
+
+    setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        
+        const themeIcon = document.querySelector('.theme-icon');
+        if (themeIcon) {
+            themeIcon.textContent = theme === 'light' ? '🌙' : '☀️';
+        }
     }
 }
 

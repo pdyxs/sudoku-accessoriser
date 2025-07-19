@@ -1,3 +1,39 @@
+:root {
+    --bg-primary: #f5f5f5;
+    --bg-secondary: #ffffff;
+    --text-primary: #333333;
+    --text-secondary: #7f8c8d;
+    --text-tertiary: #34495e;
+    --border-color: #e0e0e0;
+    --border-hover: #3498db;
+    --button-primary: #3498db;
+    --button-primary-hover: #2980b9;
+    --button-secondary: #95a5a6;
+    --button-secondary-hover: #7f8c8d;
+    --feature-bg: #f8f9fa;
+    --preview-bg: #f8f9fa;
+    --shadow: rgba(0, 0, 0, 0.1);
+    --shadow-hover: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --text-tertiary: #e0e0e0;
+    --border-color: #404040;
+    --border-hover: #5dade2;
+    --button-primary: #5dade2;
+    --button-primary-hover: #3498db;
+    --button-secondary: #6c757d;
+    --button-secondary-hover: #5a6268;
+    --feature-bg: #383838;
+    --preview-bg: #383838;
+    --shadow: rgba(0, 0, 0, 0.3);
+    --shadow-hover: rgba(0, 0, 0, 0.4);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -7,8 +43,9 @@
 body {
     font-family: system-ui, -apple-system, sans-serif;
     line-height: 1.6;
-    color: #333;
-    background-color: #f5f5f5;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -18,30 +55,61 @@ body {
 }
 
 header {
-    text-align: center;
     margin-bottom: 40px;
     padding: 40px 20px;
-    background: white;
+    background: var(--bg-secondary);
     border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px var(--shadow);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+}
+
+.header-content > div {
+    flex: 1;
 }
 
 header h1 {
     font-size: 2.5rem;
-    color: #2c3e50;
+    color: var(--text-primary);
     margin-bottom: 10px;
 }
 
 header p {
     font-size: 1.1rem;
-    color: #7f8c8d;
+    color: var(--text-secondary);
+}
+
+.theme-toggle {
+    background: none;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    margin-left: 20px;
+}
+
+.theme-toggle:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--shadow-hover);
 }
 
 .step {
-    background: white;
+    background: var(--bg-secondary);
     border-radius: 12px;
     padding: 30px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px var(--shadow);
     margin-bottom: 20px;
 }
 
@@ -50,7 +118,7 @@ header p {
 }
 
 .step h2 {
-    color: #2c3e50;
+    color: var(--text-primary);
     margin-bottom: 20px;
     font-size: 1.8rem;
 }
@@ -63,21 +131,23 @@ header p {
     display: block;
     margin-bottom: 8px;
     font-weight: 600;
-    color: #34495e;
+    color: var(--text-tertiary);
 }
 
 .input-group input {
     width: 100%;
     padding: 12px 16px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--border-color);
     border-radius: 8px;
     font-size: 1rem;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
     transition: border-color 0.3s ease;
 }
 
 .input-group input:focus {
     outline: none;
-    border-color: #3498db;
+    border-color: var(--border-hover);
 }
 
 button {
@@ -92,26 +162,26 @@ button {
 
 button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px var(--shadow-hover);
 }
 
 .primary-btn, button[type="submit"] {
-    background: #3498db;
+    background: var(--button-primary);
     color: white;
 }
 
 .primary-btn:hover, button[type="submit"]:hover {
-    background: #2980b9;
+    background: var(--button-primary-hover);
 }
 
 .secondary-btn {
-    background: #95a5a6;
+    background: var(--button-secondary);
     color: white;
     margin-right: 10px;
 }
 
 .secondary-btn:hover {
-    background: #7f8c8d;
+    background: var(--button-secondary-hover);
 }
 
 .features-grid {
@@ -122,15 +192,15 @@ button:hover {
 }
 
 .feature-item {
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--border-color);
     border-radius: 8px;
     padding: 20px;
-    background: #f8f9fa;
+    background: var(--feature-bg);
     transition: border-color 0.3s ease;
 }
 
 .feature-item:hover {
-    border-color: #3498db;
+    border-color: var(--border-hover);
 }
 
 .feature-header {
@@ -142,7 +212,7 @@ button:hover {
 
 .feature-name {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--text-primary);
     font-size: 1.1rem;
 }
 
@@ -150,7 +220,7 @@ button:hover {
     width: 30px;
     height: 30px;
     border-radius: 4px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
 }
 
 .feature-controls {
@@ -166,16 +236,18 @@ button:hover {
 
 .control-group label {
     font-size: 0.9rem;
-    color: #555;
+    color: var(--text-secondary);
     min-width: 80px;
 }
 
 .control-group input, .control-group select {
     flex: 1;
     padding: 6px 10px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 0.9rem;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 .step-actions {
@@ -184,7 +256,7 @@ button:hover {
     align-items: center;
     margin-top: 30px;
     padding-top: 20px;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--border-color);
 }
 
 .preview-container {
@@ -193,12 +265,12 @@ button:hover {
 }
 
 #puzzle-preview {
-    background: #f8f9fa;
-    border: 2px dashed #ddd;
+    background: var(--preview-bg);
+    border: 2px dashed var(--border-color);
     border-radius: 8px;
     padding: 40px;
     margin: 20px 0;
-    color: #7f8c8d;
+    color: var(--text-secondary);
     font-style: italic;
 }
 
@@ -209,6 +281,16 @@ button:hover {
     
     header {
         padding: 20px 15px;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+    
+    .theme-toggle {
+        margin-left: 0;
     }
     
     header h1 {
