@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Accessoriser</title>
+    <link rel="stylesheet" href="./src/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sudoku Accessoriser</h1>
+            <p>Make sudoku puzzles more accessible by customizing their visual features</p>
+        </header>
+
+        <main>
+            <!-- Step 1: URL Input -->
+            <section id="url-input-section" class="step active">
+                <h2>Enter Puzzle URL</h2>
+                <form id="puzzle-url-form">
+                    <div class="input-group">
+                        <label for="puzzle-url">SudokuPad Puzzle URL:</label>
+                        <input type="url" id="puzzle-url" name="puzzle-url" 
+                               placeholder="https://sudokupad.app/..." required>
+                    </div>
+                    <button type="submit">Load Puzzle</button>
+                </form>
+            </section>
+
+            <!-- Step 2: Feature List -->
+            <section id="features-section" class="step hidden">
+                <h2 id="puzzle-title">Puzzle Features</h2>
+                <p>Customize the visual appearance of these puzzle features:</p>
+                <div id="features-list" class="features-grid">
+                    <!-- Features will be populated dynamically -->
+                </div>
+                <div class="step-actions">
+                    <button id="back-to-url" class="secondary-btn">Back</button>
+                    <button id="preview-puzzle" class="primary-btn">Open Customized Puzzle</button>
+                </div>
+            </section>
+
+            <!-- Step 3: Preview and Export -->
+            <section id="preview-section" class="step hidden">
+                <h2>Preview & Export</h2>
+                <div class="preview-container">
+                    <p>Your customized puzzle is ready!</p>
+                    <div id="puzzle-preview">
+                        <!-- Puzzle preview will be shown here -->
+                    </div>
+                </div>
+                <div class="step-actions">
+                    <button id="back-to-features" class="secondary-btn">Back to Features</button>
+                    <button id="open-puzzle" class="primary-btn">Open Puzzle in New Tab</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="./src/script.js"></script>
+</body>
+</html>

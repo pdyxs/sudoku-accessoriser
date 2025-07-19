@@ -1,0 +1,28 @@
+{
+  "name": "sudoku-accessoriser",
+  "version": "1.0.0",
+  "description": "A website to make sudoku puzzles more accessible",
+  "scripts": {
+    "dev": "parcel index.html",
+    "build": "parcel build index.html --public-url ./",
+    "clean": "rm -rf dist .parcel-cache"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/username/sudoku-accessoriser.git"
+  },
+  "keywords": [
+    "sudoku",
+    "accessibility",
+    "puzzle"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "parcel": "^2.10.0"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "> 1%"
+  ]
+}
