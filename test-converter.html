@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PuzzleConverter Test</title>
+    <style>
+        body { font-family: monospace; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        pre { background: #f8f9fa; padding: 10px; margin: 5px 0; overflow: auto; max-height: 300px; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; width: 400px; }
+    </style>
+</head>
+<body>
+    <h1>PuzzleConverter Test (Phase 2)</h1>
+    
+    <div>
+        <h3>Test Sample URL:</h3>
+        <input type="text" id="test-url" value="https://sudokupad.app/psxczr0jpr" />
+        <button onclick="testUrl()">Test URL</button>
+        <button onclick="testConnection()">Test Connection</button>
+        <button onclick="runAllTests()">Run All Tests</button>
+    </div>
+    
+    <div id="test-results"></div>
+
+    <!-- Load dependencies -->
+    <script src="./src/sudokupad/utilities.js"></script>
+    <script src="./src/sudokupad/puzzlezipper.js"></script>
+    <script src="./src/sudokupad/fpuzzlesdecoder.js"></script>
+    <script src="./src/sudokupad/puzzletools.js"></script>
+    <script src="./src/sudokupad/puzzleloader.js"></script>
+    <script src="./src/puzzle-converter.js"></script>
+
+    <script>
+        const results = document.getElementById('test-results');
+        
+        function addResult(test, status, message, details = null) {
+            const div = document.createElement('div');
+            div.className = `test-result ${status}`;
+            div.innerHTML = `
+                <strong>${test}:</strong> ${message}
+                ${details ? `<pre>${details}</pre>` : ''}
+            `;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            results.innerHTML = '';
+        }
+
+        async function testUrl() {
+            clearResults();
+            const url = document.getElementById('test-url').value;
+            
+            addResult('URL Test', 'info', `Testing URL: ${url}`);
+            
+            try {
+                // Test URL extraction
+                const puzzleId = PuzzleConverter.extractPuzzleId(url);
+                if (puzzleId) {
+                    addResult('URL Extraction', 'success', `Extracted puzzle ID: ${puzzleId}`);
+                } else {
+                    addResult('URL Extraction', 'error', 'Failed to extract puzzle ID from URL');
+                    return;
+                }
+                
+                // Test URL validation
+                const isValid = PuzzleConverter.isValidSudokuPadUrl(url);
+                addResult('URL Validation', isValid ? 'success' : 'error', 
+                    isValid ? 'URL is valid' : 'URL is invalid');
+                
+                // Test conversion (this will actually fetch data)
+                addResult('Conversion', 'info', 'Starting puzzle conversion...');
+                
+                const result = await PuzzleConverter.convertSudokuPadUrl(url);
+                
+                addResult('Conversion', 'success', 'Puzzle converted successfully!', 
+                    `Title: ${result.title}\n` +
+                    `Puzzle ID: ${result.puzzleId}\n` +
+                    `Data type: ${result.dataType}\n` +
+                    `Has grid: ${result.hasGrid ? 'Yes' : 'No'}\n` +
+                    `Has lines: ${result.hasLines ? 'Yes' : 'No'}\n` +
+                    `Has regions: ${result.hasRegions ? 'Yes' : 'No'}\n` +
+                    `Has cages: ${result.hasCages ? 'Yes' : 'No'}\n` +
+                    `Lines count: ${result.originalData?.lines?.length || 'N/A'}\n` +
+                    `Regions count: ${result.originalData?.regions?.length || 'N/A'}\n` +
+                    `Sample data keys: ${Object.keys(result.originalData || {}).slice(0, 10).join(', ')}\n` +
+                    `Sample JSON: ${JSON.stringify(result.originalData).substring(0, 400)}...`
+                );
+                
+            } catch (error) {
+                addResult('Conversion', 'error', `Conversion failed: ${error.message}`, 
+                    error.stack);
+            }
+        }
+
+        async function testConnection() {
+            clearResults();
+            
+            try {
+                const result = await PuzzleConverter.testConnection();
+                
+                if (result.success) {
+                    addResult('Connection Test', 'success', result.message, 
+                        `Test URL: ${result.testUrl}`);
+                } else {
+                    addResult('Connection Test', 'error', result.message, result.error);
+                }
+            } catch (error) {
+                addResult('Connection Test', 'error', `Connection test failed: ${error.message}`);
+            }
+        }
+
+        async function runAllTests() {
+            clearResults();
+            
+            addResult('Test Suite', 'info', 'Running all Phase 2 tests...');
+            
+            // Test 1: Class loading
+            try {
+                if (typeof PuzzleConverter !== 'undefined') {
+                    addResult('Class Loading', 'success', 'PuzzleConverter loaded successfully');
+                } else {
+                    addResult('Class Loading', 'error', 'PuzzleConverter not found');
+                    return;
+                }
+            } catch (e) {
+                addResult('Class Loading', 'error', `Error: ${e.message}`);
+                return;
+            }
+            
+            // Test 2: URL extraction tests
+            const testUrls = [
+                { url: 'https://sudokupad.app/psxczr0jpr', expected: 'psxczr0jpr' },
+                { url: 'https://www.sudokupad.app/abc123def', expected: 'abc123def' },
+                { url: 'https://sudokupad.app/test?param=value', expected: 'test' },
+                { url: 'https://sudokupad.app/test#fragment', expected: 'test' },
+                { url: 'https://example.com/puzzle', expected: null },
+                { url: 'invalid-url', expected: null },
+            ];
+            
+            let urlTestsPassed = 0;
+            for (const test of testUrls) {
+                const result = PuzzleConverter.extractPuzzleId(test.url);
+                if (result === test.expected) {
+                    urlTestsPassed++;
+                } else {
+                    addResult('URL Extraction Test', 'warning', 
+                        `Failed for ${test.url}`, 
+                        `Expected: ${test.expected}, Got: ${result}`);
+                }
+            }
+            
+            addResult('URL Extraction Tests', 
+                urlTestsPassed === testUrls.length ? 'success' : 'warning',
+                `${urlTestsPassed}/${testUrls.length} URL extraction tests passed`);
+            
+            // Test 3: Dependencies check
+            const dependencies = ['PuzzleLoader', 'PuzzleZipper', 'loadFPuzzle', 'PuzzleTools'];
+            const missingDeps = dependencies.filter(dep => typeof window[dep] === 'undefined');
+            
+            if (missingDeps.length === 0) {
+                addResult('Dependencies', 'success', 'All required dependencies loaded');
+            } else {
+                addResult('Dependencies', 'warning', 
+                    `Missing dependencies: ${missingDeps.join(', ')}`);
+            }
+            
+            addResult('Test Suite', 'info', 'Phase 2 tests completed. Use "Test URL" to test actual conversion.');
+        }
+
+        // Auto-run tests on page load
+        document.addEventListener('DOMContentLoaded', runAllTests);
+    </script>
+</body>
+</html>

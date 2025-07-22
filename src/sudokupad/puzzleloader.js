@@ -47,18 +47,39 @@ const PuzzleLoader = (() => {
 				return JSON.parse(data);
 			}
 			catch(err) {
+				console.log('Direct JSON parse failed, trying decompression methods...');
 				try {
-					// Try PuzzleZipper unzip if available
-					if (typeof PuzzleZipper !== 'undefined') {
-						return JSON.parse(PuzzleZipper.unzip(data));
+					// If data starts with 'scl', strip the prefix and try decompression
+					let processData = data;
+					if (data.startsWith('scl')) {
+						processData = data.substring(3); // Remove 'scl' prefix
+						console.log('Stripped SCL prefix, remaining data length:', processData.length);
 					}
-					return JSON.parse(data);
+					
+					// Try loadFPuzzle decompression first (for base64 compressed data)
+					if (typeof loadFPuzzle !== 'undefined' && loadFPuzzle.decompressPuzzle) {
+						const decompressed = loadFPuzzle.decompressPuzzle(processData);
+						console.log('F-Puzzle decompression successful, length:', decompressed.length);
+						return JSON.parse(decompressed);
+					}
 				}
 				catch(err2) {
-					console.error('saveJsonUnzip:', err2);
-					return data;
+					console.log('F-Puzzle decompression failed:', err2.message);
+					try {
+						// Try PuzzleZipper unzip if available
+						if (typeof PuzzleZipper !== 'undefined') {
+							const unzipped = PuzzleZipper.unzip(data);
+							console.log('PuzzleZipper unzip successful');
+							return JSON.parse(unzipped);
+						}
+					}
+					catch(err3) {
+						console.error('All decompression methods failed:', err3);
+						return data;
+					}
 				}
 			}
+			return data;
 		};
 
 		const decompressPuzzleId = puzzleId => {
