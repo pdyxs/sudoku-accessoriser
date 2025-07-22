@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Utilities Test</title>
+    <style>
+        body { font-family: monospace; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        pre { background: #f8f9fa; padding: 10px; margin: 5px 0; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>SudokuPad Utilities Test</h1>
+    <div id="test-results"></div>
+
+    <!-- Load utilities -->
+    <script src="./src/sudokupad/utilities.js"></script>
+    <script src="./src/sudokupad/puzzlezipper.js"></script>
+    <script src="./src/sudokupad/fpuzzlesdecoder.js"></script>
+    <script src="./src/sudokupad/puzzletools.js"></script>
+    <script src="./src/sudokupad/puzzleloader.js"></script>
+
+    <script>
+        const results = document.getElementById('test-results');
+        
+        function addResult(test, status, message, details = null) {
+            const div = document.createElement('div');
+            div.className = `test-result ${status}`;
+            div.innerHTML = `
+                <strong>${test}:</strong> ${message}
+                ${details ? `<pre>${details}</pre>` : ''}
+            `;
+            results.appendChild(div);
+        }
+
+        function runTests() {
+            addResult('Test Setup', 'info', 'Starting utility tests...');
+
+            // Test 1: Check if utilities loaded
+            try {
+                if (typeof window.SudokuPadUtilities !== 'undefined') {
+                    addResult('Utilities Load', 'success', 'SudokuPadUtilities loaded successfully');
+                } else {
+                    addResult('Utilities Load', 'error', 'SudokuPadUtilities not found');
+                }
+            } catch (e) {
+                addResult('Utilities Load', 'error', `Error: ${e.message}`);
+            }
+
+            // Test 2: Check PuzzleZipper
+            try {
+                if (typeof PuzzleZipper !== 'undefined') {
+                    const testData = '{"test": "data"}';
+                    const zipped = PuzzleZipper.zip(testData);
+                    const unzipped = PuzzleZipper.unzip(zipped);
+                    
+                    // Compare parsed JSON to handle formatting differences
+                    const originalParsed = JSON.parse(testData);
+                    const unzippedParsed = JSON.parse(unzipped);
+                    
+                    if (JSON.stringify(originalParsed) === JSON.stringify(unzippedParsed)) {
+                        addResult('PuzzleZipper', 'success', 'Compression/decompression working', 
+                            `Zipped length: ${zipped.length} chars`);
+                    } else {
+                        addResult('PuzzleZipper', 'error', 'Compression/decompression failed', 
+                            `Original: ${testData}\nUnzipped: ${unzipped}`);
+                    }
+                } else {
+                    addResult('PuzzleZipper', 'error', 'PuzzleZipper not found');
+                }
+            } catch (e) {
+                addResult('PuzzleZipper', 'error', `Error: ${e.message}`);
+            }
+
+            // Test 3: Check PuzzleLoader
+            try {
+                if (typeof PuzzleLoader !== 'undefined') {
+                    addResult('PuzzleLoader', 'success', 'PuzzleLoader loaded successfully');
+                    
+                    // Test URL generation
+                    const testId = 'psxczr0jpr';
+                    const url = PuzzleLoader.apiPuzzleUrlLocal(testId);
+                    const expectedUrl = `https://sudokupad.app/api/puzzle/${testId}`;
+                    
+                    if (url === expectedUrl) {
+                        addResult('URL Generation', 'success', 'API URL generation working', url);
+                    } else {
+                        addResult('URL Generation', 'error', 'API URL generation failed', 
+                            `Expected: ${expectedUrl}\nGot: ${url}`);
+                    }
+                } else {
+                    addResult('PuzzleLoader', 'error', 'PuzzleLoader not found');
+                }
+            } catch (e) {
+                addResult('PuzzleLoader', 'error', `Error: ${e.message}`);
+            }
+
+            // Test 4: Check PuzzleTools
+            try {
+                if (typeof PuzzleTools !== 'undefined') {
+                    addResult('PuzzleTools', 'success', 'PuzzleTools loaded successfully');
+                    
+                    // Test cell index calculation
+                    const index = PuzzleTools.getCellIndex(0, 0);
+                    const position = PuzzleTools.getCellPosition(0);
+                    
+                    if (index === 0 && position[0] === 0 && position[1] === 0) {
+                        addResult('Cell Calculations', 'success', 'Cell index calculations working');
+                    } else {
+                        addResult('Cell Calculations', 'error', 'Cell index calculations failed');
+                    }
+                } else {
+                    addResult('PuzzleTools', 'error', 'PuzzleTools not found');
+                }
+            } catch (e) {
+                addResult('PuzzleTools', 'error', `Error: ${e.message}`);
+            }
+
+            // Test 5: Check loadFPuzzle
+            try {
+                if (typeof loadFPuzzle !== 'undefined') {
+                    addResult('loadFPuzzle', 'success', 'loadFPuzzle loaded successfully');
+                } else {
+                    addResult('loadFPuzzle', 'error', 'loadFPuzzle not found');
+                }
+            } catch (e) {
+                addResult('loadFPuzzle', 'error', `Error: ${e.message}`);
+            }
+
+            addResult('Tests Complete', 'info', 'All basic utility tests completed');
+        }
+
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>
