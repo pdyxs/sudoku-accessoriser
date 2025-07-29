@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Line Replacements</title>
+    <style>
+        body { font-family: monospace; margin: 20px; }
+        pre { background: #f5f5f5; padding: 10px; overflow: auto; max-height: 300px; }
+    </style>
+</head>
+<body>
+    <h1>Debug Line Replacements</h1>
+    <button onclick="debugReplacements()">Debug Line Matching</button>
+    <div id="results"></div>
+
+    <!-- Load dependencies -->
+    <script src="./src/sudokupad/utilities.js"></script>
+    <script src="./src/sudokupad/puzzlezipper.js"></script>
+    <script src="./src/sudokupad/fpuzzlesdecoder.js"></script>
+    <script src="./src/sudokupad/puzzletools.js"></script>
+    <script src="./src/sudokupad/puzzleloader.js"></script>
+    <script src="./src/puzzle-converter.js"></script>
+    <script src="./src/script.js"></script>
+
+    <script>
+        const results = document.getElementById('results');
+        
+        function addResult(title, content) {
+            const div = document.createElement('div');
+            div.innerHTML = `<h3>${title}</h3>${content}`;
+            results.appendChild(div);
+        }
+        
+        async function debugReplacements() {
+            results.innerHTML = '';
+            
+            try {
+                // Create a test app instance
+                const testApp = new SudokuAccessoriser();
+                
+                // Load sample data
+                const response = await fetch('./sample-sudokupad.json');
+                const sampleData = await response.json();
+                
+                // Process the data
+                const processedData = PuzzleConverter.processPuzzleData(sampleData, 'debug');
+                testApp.puzzleData = processedData;
+                
+                // Simulate a customization
+                testApp.customizations = {
+                    0: { color: '#ff0000' } // Change first feature group to red
+                };
+                
+                addResult('Debug Info', `
+                    <p><strong>Features count:</strong> ${processedData.features.length}</p>
+                    <p><strong>First feature lines count:</strong> ${processedData.features[0].lines.length}</p>
+                    <p><strong>Original puzzle lines count:</strong> ${sampleData.lines.length}</p>
+                    
+                    <h4>Original Puzzle Lines (first 3):</h4>
+                    <pre>${JSON.stringify(sampleData.lines.slice(0, 3), null, 2)}</pre>
+                    
+                    <h4>Feature Lines (first 3):</h4>
+                    <pre>${JSON.stringify(processedData.features[0].lines.slice(0, 3), null, 2)}</pre>
+                    
+                    <h4>Line Comparison Test:</h4>
+                    <pre>${testLineComparison(sampleData.lines[0], processedData.features[0].lines[0], testApp)}</pre>
+                `);
+                
+                // Test the customization application
+                const puzzleCopy = JSON.parse(JSON.stringify(sampleData));
+                console.log('Testing customization application...');
+                testApp.applyCustomizations(puzzleCopy);
+                
+                addResult('Customization Results', `
+                    <p><strong>Lines updated:</strong> Check console for detailed logs</p>
+                    <h4>Updated Lines Colors:</h4>
+                    <pre>${puzzleCopy.lines.map((line, i) => `Line ${i}: ${line.color}`).join('\n')}</pre>
+                `);
+                
+            } catch (error) {
+                addResult('Debug Error', `<pre style="color: red;">${error.message}\n${error.stack}</pre>`);
+            }
+        }
+        
+        function testLineComparison(originalLine, featureLine, app) {
+            const result = app.areLinesEqual(originalLine, featureLine);
+            
+            return `Original line keys: ${Object.keys(originalLine).join(', ')}
+Feature line keys: ${Object.keys(featureLine).join(', ')}
+Lines equal: ${result}
+
+Original wayPoints: ${JSON.stringify(originalLine.wayPoints)}
+Feature wayPoints: ${JSON.stringify(featureLine.wayPoints)}
+
+Original color: ${originalLine.color}
+Feature color: ${featureLine.color}
+
+Original thickness: ${originalLine.thickness}
+Feature thickness: ${featureLine.thickness}`;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Production Issues</title>
+    <style>
+        body { font-family: monospace; margin: 20px; }
+        pre { background: #f5f5f5; padding: 10px; overflow: auto; max-height: 300px; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Debug Production Issues</h1>
+    <button onclick="testPuzzleLoad()">Test Puzzle Loading (sls5hykugl)</button>
+    <button onclick="testCustomization()">Test Customization Process</button>
+    <button onclick="testUrlGeneration()">Test URL Generation</button>
+    <div id="results"></div>
+
+    <!-- Load dependencies -->
+    <script src="./src/sudokupad/utilities.js"></script>
+    <script src="./src/sudokupad/puzzlezipper.js"></script>
+    <script src="./src/sudokupad/fpuzzlesdecoder.js"></script>
+    <script src="./src/sudokupad/puzzletools.js"></script>
+    <script src="./src/sudokupad/puzzleloader.js"></script>
+    <script src="./src/puzzle-converter.js"></script>
+    <script src="./src/script.js"></script>
+
+    <script>
+        const results = document.getElementById('results');
+        
+        function addResult(title, content, isError = false) {
+            const div = document.createElement('div');
+            div.innerHTML = `<h3 class="${isError ? 'error' : 'success'}">${title}</h3>${content}`;
+            results.appendChild(div);
+        }
+        
+        async function testPuzzleLoad() {
+            results.innerHTML = '';
+            addResult('Testing Puzzle Load', '<p>Loading puzzle sls5hykugl...</p>');
+            
+            try {
+                const puzzleUrl = 'https://sudokupad.app/sls5hykugl';
+                const puzzleData = await PuzzleConverter.convertSudokuPadUrl(puzzleUrl);
+                
+                addResult('Puzzle Load Success', `
+                    <p><strong>Title:</strong> ${puzzleData.title}</p>
+                    <p><strong>Features:</strong> ${puzzleData.features.length}</p>
+                    <p><strong>Total Lines:</strong> ${puzzleData.totalLines}</p>
+                    <p><strong>Original Data Type:</strong> ${typeof puzzleData.originalData}</p>
+                    <p><strong>Lines in Original Data:</strong> ${puzzleData.originalData?.lines?.length || 'undefined'}</p>
+                    <h4>Feature Breakdown:</h4>
+                    ${puzzleData.features.map((f, i) => 
+                        `<p>Feature ${i}: ${f.category} (${f.count} items) - Color: ${f.visual.color}</p>`
+                    ).join('')}
+                `);
+                
+                // Store for next tests
+                window.testPuzzleData = puzzleData;
+                
+            } catch (error) {
+                addResult('Puzzle Load Failed', `<pre class="error">${error.message}\n${error.stack}</pre>`, true);
+            }
+        }
+        
+        async function testCustomization() {            
+            if (!window.testPuzzleData) {
+                addResult('Customization Error', 'Please run "Test Puzzle Loading" first', true);
+                return;
+            }
+            
+            addResult('Testing Customization', '<p>Applying red color to first feature...</p>');
+            
+            try {
+                const testApp = new SudokuAccessoriser();
+                testApp.puzzleData = window.testPuzzleData;
+                testApp.customizations = {
+                    0: { color: '#ff0000' } // Change first feature to red
+                };
+                
+                // Create a copy of original data for testing
+                const puzzleCopy = JSON.parse(JSON.stringify(window.testPuzzleData.originalData));
+                const originalColors = puzzleCopy.lines.map(l => l.color);
+                
+                addResult('Before Customization', `
+                    <p><strong>Lines count:</strong> ${puzzleCopy.lines.length}</p>
+                    <p><strong>Original colors:</strong> ${[...new Set(originalColors)].join(', ')}</p>
+                    <p><strong>Feature 0 lines:</strong> ${window.testPuzzleData.features[0].lines.length}</p>
+                    <p><strong>Feature 0 color:</strong> ${window.testPuzzleData.features[0].visual.color}</p>
+                `);
+                
+                // Apply customizations
+                console.log('Applying customizations...');
+                testApp.applyCustomizations(puzzleCopy);
+                
+                const newColors = puzzleCopy.lines.map(l => l.color);
+                const changedCount = originalColors.filter((color, i) => color !== newColors[i]).length;
+                
+                addResult('After Customization', `
+                    <p><strong>Changed lines:</strong> ${changedCount}</p>
+                    <p><strong>New colors:</strong> ${[...new Set(newColors)].join(', ')}</p>
+                    <p><strong>Red lines:</strong> ${newColors.filter(c => c.startsWith('#ff0000')).length}</p>
+                    <h4>Line Color Changes:</h4>
+                    ${originalColors.map((oldColor, i) => 
+                        oldColor !== newColors[i] ? 
+                        `<p>Line ${i}: ${oldColor} → ${newColors[i]}</p>` : ''
+                    ).filter(s => s).join('') || '<p>No lines changed</p>'}
+                `);
+                
+                // Store customized data for URL generation test
+                window.testCustomizedData = puzzleCopy;
+                
+            } catch (error) {
+                addResult('Customization Failed', `<pre class="error">${error.message}\n${error.stack}</pre>`, true);
+            }
+        }
+        
+        async function testUrlGeneration() {
+            if (!window.testCustomizedData) {
+                addResult('URL Generation Error', 'Please run customization test first', true);
+                return;
+            }
+            
+            addResult('Testing URL Generation', '<p>Generating SudokuPad URL...</p>');
+            
+            try {
+                const testApp = new SudokuAccessoriser();
+                
+                // Test the URL generation process step by step
+                const jsonString = JSON.stringify(window.testCustomizedData);
+                addResult('Step 1: JSON String', `<p>Length: ${jsonString.length} chars</p>`);
+                
+                const compressedData = PuzzleZipper.zip(jsonString);
+                addResult('Step 2: PuzzleZipper.zip', `<p>Compressed length: ${compressedData.length} chars</p>`);
+                
+                const encodedData = loadFPuzzle.compressPuzzle(compressedData);
+                addResult('Step 3: loadFPuzzle.compressPuzzle', `<p>Encoded length: ${encodedData.length} chars</p>`);
+                
+                const sclPuzzleId = 'scl' + encodedData;
+                addResult('Step 4: SCL Puzzle ID', `<p>SCL ID length: ${sclPuzzleId.length} chars</p>`);
+                
+                const finalUrl = `https://sudokupad.app/scf?puzzleid=${encodeURIComponent(sclPuzzleId)}`;
+                addResult('Step 5: Final URL', `
+                    <p><strong>URL:</strong> <a href="${finalUrl}" target="_blank">${finalUrl.substring(0, 100)}...</a></p>
+                    <p><strong>URL Length:</strong> ${finalUrl.length} chars</p>
+                `);
+                
+            } catch (error) {
+                addResult('URL Generation Failed', `<pre class="error">${error.message}\n${error.stack}</pre>`, true);
+            }
+        }
+    </script>
+</body>
+</html>

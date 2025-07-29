@@ -4,10 +4,6 @@ dist/
 .env
 .DS_Store
 
-# Development and test files
-debug-*.html
-test-*.html
-
 # Reference repository (exclude from deployment)
 temp-reference-3/
 

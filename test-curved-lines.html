@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Curved Lines Support</title>
+    <style>
+        body { font-family: monospace; margin: 20px; }
+        .feature-box { border: 1px solid #ccc; margin: 10px 0; padding: 15px; border-radius: 5px; }
+        .color-swatch { display: inline-block; width: 30px; height: 20px; border: 1px solid #000; margin-right: 10px; vertical-align: middle; }
+        pre { background: #f5f5f5; padding: 10px; overflow: auto; max-height: 300px; }
+    </style>
+</head>
+<body>
+    <h1>Test Curved Lines Support</h1>
+    <button onclick="testCurvedLines()">Test with Curved Line Example</button>
+    <div id="results"></div>
+
+    <!-- Load dependencies -->
+    <script src="./src/sudokupad/utilities.js"></script>
+    <script src="./src/sudokupad/puzzlezipper.js"></script>
+    <script src="./src/sudokupad/fpuzzlesdecoder.js"></script>
+    <script src="./src/sudokupad/puzzletools.js"></script>
+    <script src="./src/sudokupad/puzzleloader.js"></script>
+    <script src="./src/puzzle-converter.js"></script>
+
+    <script>
+        const results = document.getElementById('results');
+        
+        function clearResults() {
+            results.innerHTML = '';
+        }
+        
+        function addResult(title, content) {
+            const div = document.createElement('div');
+            div.innerHTML = `<h3>${title}</h3>${content}`;
+            results.appendChild(div);
+        }
+        
+        async function testCurvedLines() {
+            clearResults();
+            
+            try {
+                // Load the curved line example data
+                const response = await fetch('./example-curved.json');
+                const curvedData = await response.json();
+                
+                console.log('Testing curved line extraction...');
+                const processedData = PuzzleConverter.processPuzzleData(curvedData, 'curved-example');
+                
+                addResult('Curved Lines Test Results', `
+                    <p><strong>Title:</strong> ${processedData.title}</p>
+                    <p><strong>Total Lines:</strong> ${processedData.totalLines}</p>
+                    <p><strong>Feature Groups:</strong> ${processedData.featureGroups}</p>
+                    
+                    <h4>Extracted Line Features:</h4>
+                    ${processedData.features.map(feature => `
+                        <div class="feature-box">
+                            <p><strong>Color:</strong> 
+                                <span class="color-swatch" style="background-color: ${feature.visual.color};"></span>
+                                ${feature.visual.color}
+                            </p>
+                            <p><strong>Line Count:</strong> ${feature.count}</p>
+                            <p><strong>Thickness:</strong> ${feature.visual.thickness}</p>
+                            <p><strong>Category:</strong> ${feature.category}</p>
+                            <p><strong>Line Types:</strong></p>
+                            <ul>
+                                ${feature.lines.map(line => {
+                                    if (line.wayPoints) {
+                                        return `<li>Straight line: ${line.wayPoints.length} points</li>`;
+                                    } else if (line.d) {
+                                        return `<li>Curved line: SVG path (${line.d.length} chars)</li>`;
+                                    } else {
+                                        return `<li>Other line type</li>`;
+                                    }
+                                }).join('')}
+                            </ul>
+                            <details>
+                                <summary>Line Data (${feature.lines.length} lines)</summary>
+                                <pre>${JSON.stringify(feature.lines, null, 2)}</pre>
+                            </details>
+                        </div>
+                    `).join('')}
+                    
+                    <details>
+                        <summary>Full Processed Data</summary>
+                        <pre>${JSON.stringify(processedData, null, 2)}</pre>
+                    </details>
+                `);
+                
+            } catch (error) {
+                addResult('Curved Lines Test Error', `<pre style="color: red;">${error.message}\n${error.stack}</pre>`);
+            }
+        }
+    </script>
+</body>
+</html>
