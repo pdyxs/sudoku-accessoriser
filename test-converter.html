@@ -21,7 +21,7 @@
     
     <div>
         <h3>Test Sample URL:</h3>
-        <input type="text" id="test-url" value="https://sudokupad.app/psxczr0jpr" />
+        <input type="text" id="test-url" value="https://sudokupad.app/pdyxs/whispers-in-the-mist" />
         <button onclick="testUrl()">Test URL</button>
         <button onclick="testConnection()">Test Connection</button>
         <button onclick="runAllTests()">Run All Tests</button>
@@ -138,9 +138,11 @@
             // Test 2: URL extraction tests
             const testUrls = [
                 { url: 'https://sudokupad.app/psxczr0jpr', expected: 'psxczr0jpr' },
-                { url: 'https://www.sudokupad.app/abc123def', expected: 'abc123def' },
-                { url: 'https://sudokupad.app/test?param=value', expected: 'test' },
-                { url: 'https://sudokupad.app/test#fragment', expected: 'test' },
+                { url: 'https://sudokupad.app/pdyxs/whispers-in-the-mist', expected: 'pdyxs/whispers-in-the-mist' },
+                { url: 'https://www.sudokupad.app/username/puzzle-name', expected: 'username/puzzle-name' },
+                { url: 'https://beta.sudokupad.app/test123', expected: 'test123' },
+                { url: 'https://sudokupad.app/sudoku.html?puzzleid=abc123', expected: 'abc123' },
+                { url: 'sudokupad://puzzle/xyz789', expected: 'xyz789' },
                 { url: 'https://example.com/puzzle', expected: null },
                 { url: 'invalid-url', expected: null },
             ];

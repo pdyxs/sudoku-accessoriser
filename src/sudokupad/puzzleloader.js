@@ -47,43 +47,23 @@ const PuzzleLoader = (() => {
 				return JSON.parse(data);
 			}
 			catch(err) {
-				console.log('Direct JSON parse failed, trying decompression methods...');
 				try {
-					// If data starts with 'scl', strip the prefix and try decompression
-					let processData = data;
-					if (data.startsWith('scl')) {
-						processData = data.substring(3); // Remove 'scl' prefix
-						console.log('Stripped SCL prefix, remaining data length:', processData.length);
+					// Use PuzzleZipper.unzip like the reference implementation
+					if (typeof PuzzleZipper !== 'undefined') {
+						return JSON.parse(PuzzleZipper.unzip(data));
 					}
-					
-					// Try loadFPuzzle decompression first (for base64 compressed data)
-					if (typeof loadFPuzzle !== 'undefined' && loadFPuzzle.decompressPuzzle) {
-						const decompressed = loadFPuzzle.decompressPuzzle(processData);
-						console.log('F-Puzzle decompression successful, length:', decompressed.length);
-						return JSON.parse(decompressed);
-					}
+					return data;
 				}
-				catch(err2) {
-					console.log('F-Puzzle decompression failed:', err2.message);
-					try {
-						// Try PuzzleZipper unzip if available
-						if (typeof PuzzleZipper !== 'undefined') {
-							const unzipped = PuzzleZipper.unzip(data);
-							console.log('PuzzleZipper unzip successful');
-							return JSON.parse(unzipped);
-						}
-					}
-					catch(err3) {
-						console.error('All decompression methods failed:', err3);
-						return data;
-					}
+				catch(err) {
+					console.error('saveJsonUnzip:', err);
+					return data;
 				}
 			}
-			return data;
 		};
 
 		const decompressPuzzleId = puzzleId => {
-			let puzzle = puzzleId;
+			let puzzle;
+			puzzle = stripPuzzleFormat(puzzleId);
 			try {
 				puzzle = decodeURIComponent(puzzle);
 			} catch(e) {
@@ -130,10 +110,46 @@ const PuzzleLoader = (() => {
 			]);
 		};
 
+	// Puzzle format detection from reference implementation
+		const PuzzleFormats = [
+			{prefix: 'scl', alias: ['ctc']},
+			{prefix: 'fpuz', alias: ['fpuzzles']},
+			{prefix: 'scf'}
+		];
+		
+		const createReAlias = ({prefix, alias}) => {
+			const allPrefixes = [prefix, ...(alias || [])];
+			const sortedPrefixes = [...new Set(allPrefixes)].sort((a, b) => b.length - a.length);
+			return new RegExp(`^(${sortedPrefixes.join('|')})([\\s\\S]*)`, 'm');
+		};
+		
+		// Initialize regex patterns for each format
+		PuzzleFormats.forEach(pf => {
+			pf.reAlias = createReAlias(pf);
+		});
+		
+		const getPuzzleFormatInfo = (puzzleId = '') => {
+			for(const pf of PuzzleFormats) {
+				if(pf.reAlias.test(puzzleId)) return pf;
+			}
+		};
+		
+		const stripPuzzleFormat = puzzleId => {
+			const pf = getPuzzleFormatInfo(puzzleId);
+			if(pf) return puzzleId.match(pf.reAlias)[2];
+			return puzzleId;
+		};
+		
+		const isRemotePuzzleId = puzzleId => {
+			const pf = getPuzzleFormatInfo(puzzleId);
+			if(pf) return false;
+			return true;
+		};
+
 	// Fetch
 		const fetchPuzzle = async (puzzleId, opts = {timeout: 10000}) => {
 			// If it's not a remote puzzle ID, return as is
-			if(puzzleId.includes('{') || puzzleId.includes('scl') || puzzleId.includes('fpuz')) {
+			if(!isRemotePuzzleId(puzzleId)) {
 				return puzzleId;
 			}
 			
@@ -200,6 +216,9 @@ const PuzzleLoader = (() => {
 		updateCacheRaw, 
 		clearCacheRaw, 
 		getPuzzleRaw,
+		getPuzzleFormatInfo,
+		stripPuzzleFormat,
+		isRemotePuzzleId,
 		saveDecompress, 
 		saveJsonUnzip, 
 		decompressPuzzleId,

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Custom URL Issue</title>
+</head>
+<body>
+    <h1>Debug Custom URL Processing</h1>
+    <button onclick="debugCustomUrl()">Debug pdyxs/whispers-in-the-mist</button>
+    <div id="output"></div>
+
+    <!-- Load dependencies -->
+    <script src="./src/sudokupad/utilities.js"></script>
+    <script src="./src/sudokupad/puzzlezipper.js"></script>
+    <script src="./src/sudokupad/fpuzzlesdecoder.js"></script>
+    <script src="./src/sudokupad/puzzletools.js"></script>
+    <script src="./src/sudokupad/puzzleloader.js"></script>
+
+    <script>
+        async function debugCustomUrl() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<pre>Starting debug...</pre>';
+            
+            try {
+                const puzzleId = 'pdyxs/whispers-in-the-mist';
+                
+                // Step 1: Check if it's considered remote
+                const isRemote = PuzzleLoader.isRemotePuzzleId(puzzleId);
+                output.innerHTML += `<pre>Step 1 - isRemotePuzzleId('${puzzleId}'): ${isRemote}</pre>`;
+                
+                if (isRemote) {
+                    // Step 2: Fetch the puzzle
+                    output.innerHTML += `<pre>Step 2 - Fetching puzzle data...</pre>`;
+                    const fetchedData = await PuzzleLoader.fetchPuzzle(puzzleId);
+                    output.innerHTML += `<pre>Fetched data type: ${typeof fetchedData}</pre>`;
+                    output.innerHTML += `<pre>Fetched data sample: ${String(fetchedData).substring(0, 200)}</pre>`;
+                    
+                    // Step 3: Parse the fetched data
+                    output.innerHTML += `<pre>Step 3 - Parsing fetched data...</pre>`;
+                    const parsedData = await PuzzleLoader.parsePuzzleData(fetchedData);
+                    output.innerHTML += `<pre>Parsed data type: ${typeof parsedData}</pre>`;
+                    
+                    if (typeof parsedData === 'object') {
+                        output.innerHTML += `<pre>SUCCESS! Parsed data keys: ${Object.keys(parsedData).join(', ')}</pre>`;
+                        output.innerHTML += `<pre>Sample data: ${JSON.stringify(parsedData).substring(0, 300)}</pre>`;
+                    } else {
+                        output.innerHTML += `<pre>PROBLEM: Still got string data: ${String(parsedData).substring(0, 200)}</pre>`;
+                        
+                        // Try manual decompression
+                        if (String(parsedData).startsWith('scl')) {
+                            output.innerHTML += `<pre>Attempting manual SCL decompression...</pre>`;
+                            const compressedPart = String(parsedData).substring(3);
+                            try {
+                                const decompressed = loadFPuzzle.decompressPuzzle(compressedPart);
+                                const finalData = JSON.parse(decompressed);
+                                output.innerHTML += `<pre>MANUAL SUCCESS! Data type: ${typeof finalData}</pre>`;
+                                output.innerHTML += `<pre>Manual result keys: ${Object.keys(finalData).join(', ')}</pre>`;
+                            } catch (err) {
+                                output.innerHTML += `<pre>Manual decompression failed: ${err.message}</pre>`;
+                            }
+                        }
+                    }
+                } else {
+                    output.innerHTML += `<pre>Puzzle ID not considered remote, parsing directly...</pre>`;
+                    const parsedData = await PuzzleLoader.parsePuzzleData(puzzleId);
+                    output.innerHTML += `<pre>Direct parse result: ${typeof parsedData}</pre>`;
+                }
+                
+            } catch (error) {
+                output.innerHTML += `<pre>ERROR: ${error.message}</pre>`;
+                console.error('Debug error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

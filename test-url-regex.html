@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test URL Regex</title>
+</head>
+<body>
+    <h1>Testing SudokuPad URL Patterns</h1>
+    <div id="results"></div>
+
+    <script>
+        const results = document.getElementById('results');
+        
+        // The regex from the reference repository
+        const reCtc = /(?:^\s*(http[s]?:\/\/)?(app.crackingthecryptic.com|([a-z]+\.)?sudokupad.app))(?:\/sudoku(?:\.html)?)?\/?(?:\?puzzleid=)?(?<puzzleid>.+)/;
+        
+        // Test URLs
+        const testUrls = [
+            'https://sudokupad.app/psxczr0jpr',
+            'https://sudokupad.app/pdyxs/whispers-in-the-mist',
+            'https://www.sudokupad.app/username/puzzle-name',
+            'https://beta.sudokupad.app/test123',
+            'sudokupad.app/short-form',
+            'https://sudokupad.app/sudoku.html?puzzleid=abc123',
+            'https://sudokupad.app/sudoku/?puzzleid=def456'
+        ];
+        
+        function addResult(url, match) {
+            const div = document.createElement('div');
+            div.style.marginBottom = '20px';
+            div.style.padding = '10px';
+            div.style.border = '1px solid #ccc';
+            
+            if (match) {
+                div.innerHTML = `
+                    <strong>✅ ${url}</strong><br>
+                    <code>puzzleid: "${match.groups.puzzleid}"</code><br>
+                    <small>Full match: "${match[0]}"</small>
+                `;
+                div.style.backgroundColor = '#d4edda';
+            } else {
+                div.innerHTML = `
+                    <strong>❌ ${url}</strong><br>
+                    <em>No match</em>
+                `;
+                div.style.backgroundColor = '#f8d7da';
+            }
+            
+            results.appendChild(div);
+        }
+        
+        // Test all URLs
+        testUrls.forEach(url => {
+            const match = url.match(reCtc);
+            addResult(url, match);
+        });
+    </script>
+</body>
+</html>
