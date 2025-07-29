@@ -130,9 +130,7 @@
             addResult('Testing URL Generation', '<p>Generating SudokuPad URL...</p>');
             
             try {
-                const testApp = new SudokuAccessoriser();
-                
-                // Test the URL generation process step by step
+                // Test the URL generation process step by step without creating SudokuAccessoriser
                 const jsonString = JSON.stringify(window.testCustomizedData);
                 addResult('Step 1: JSON String', `<p>Length: ${jsonString.length} chars</p>`);
                 
