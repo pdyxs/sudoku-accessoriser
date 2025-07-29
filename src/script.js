@@ -114,7 +114,16 @@ class SudokuAccessoriser {
         featureDiv.innerHTML = `
             <div class="feature-header">
                 <span class="feature-name">${displayName}</span>
-                <div class="feature-preview" style="background-color: ${color}"></div>
+                <div class="color-previews">
+                    <div class="color-preview-group">
+                        <div class="feature-preview original-color" style="background-color: ${color}" title="Original color"></div>
+                        <span class="color-label">Original</span>
+                    </div>
+                    <div class="color-preview-group">
+                        <div class="feature-preview current-color" style="background-color: ${color}" title="New color"></div>
+                        <span class="color-label">New</span>
+                    </div>
+                </div>
             </div>
             <div class="feature-controls">
                 ${this.createFeatureControls(feature, index)}
@@ -264,11 +273,13 @@ class SudokuAccessoriser {
         }
         this.customizations[featureIndex][property] = value;
 
-        // Update the preview color if it's a color change
+        // Update the current color preview if it's a color change
         if (property === 'color') {
             const featureItems = document.querySelectorAll('.feature-item');
-            const preview = featureItems[featureIndex].querySelector('.feature-preview');
-            preview.style.backgroundColor = value;
+            const currentColorPreview = featureItems[featureIndex].querySelector('.current-color');
+            if (currentColorPreview) {
+                currentColorPreview.style.backgroundColor = value;
+            }
         }
     }
 
