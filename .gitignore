@@ -3,3 +3,25 @@ dist/
 .parcel-cache/
 .env
 .DS_Store
+
+# Development and test files
+debug-*.html
+test-*.html
+
+# Reference repository (exclude from deployment)
+temp-reference-3/
+
+# Logs and debug files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
