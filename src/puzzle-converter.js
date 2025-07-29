@@ -106,7 +106,7 @@ class PuzzleConverter {
     
     console.log(`Found ${puzzleData.lines.length} total lines`);
     
-    // Group lines by color
+    // Group lines by color (including overlay lines)
     const colorGroups = {};
     
     puzzleData.lines.forEach(line => {

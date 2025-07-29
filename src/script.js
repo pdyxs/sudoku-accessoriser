@@ -353,40 +353,80 @@ class SudokuAccessoriser {
     }
 
     applyCustomizations(puzzleData) {
+        console.log('Applying customizations:', this.customizations);
+        console.log('Original puzzle lines count:', puzzleData.lines.length);
+        
         // Apply customizations to each feature group
         Object.keys(this.customizations).forEach(featureIndex => {
             const customization = this.customizations[featureIndex];
             const feature = this.puzzleData.features[parseInt(featureIndex)];
             
+            console.log(`Processing feature ${featureIndex}:`, { customization, feature: feature ? feature.category : 'undefined' });
+            
             if (!feature || feature.category !== 'lines') {
+                console.log(`Skipping feature ${featureIndex} - not a line feature`);
                 return; // Skip non-line features for now
             }
             
             // Apply color customization to all lines in this feature group
             if (customization.color) {
-                feature.lines.forEach(line => {
+                console.log(`Applying color ${customization.color} to ${feature.lines.length} lines`);
+                
+                let matchedCount = 0;
+                feature.lines.forEach((line, lineIndex) => {
                     // Find the corresponding line in the puzzle data and update its color
                     const puzzleLine = puzzleData.lines.find(pLine => 
                         this.areLinesEqual(pLine, line)
                     );
                     if (puzzleLine) {
+                        console.log(`Found matching line ${lineIndex}, updating color from ${puzzleLine.color} to ${this.convertToHex8(customization.color)}`);
                         // Convert 6-character hex back to 8-character hex with alpha
                         puzzleLine.color = this.convertToHex8(customization.color);
+                        matchedCount++;
+                    } else {
+                        console.warn(`Could not find matching line for feature ${featureIndex}, line ${lineIndex}:`, line);
                     }
                 });
+                
+                console.log(`Successfully matched and updated ${matchedCount} out of ${feature.lines.length} lines`);
             }
         });
+        
+        console.log('Customizations applied. Updated puzzle lines:', puzzleData.lines.map(l => l.color));
     }
     
     areLinesEqual(line1, line2) {
-        // Compare lines by their waypoints to identify the same line
-        if (!line1.wayPoints || !line2.wayPoints) return false;
-        if (line1.wayPoints.length !== line2.wayPoints.length) return false;
+        // Compare lines by their defining properties to identify the same line
         
-        return line1.wayPoints.every((point, index) => {
-            const otherPoint = line2.wayPoints[index];
-            return point[0] === otherPoint[0] && point[1] === otherPoint[1];
-        });
+        // If both have wayPoints, compare those
+        if (line1.wayPoints && line2.wayPoints) {
+            if (line1.wayPoints.length !== line2.wayPoints.length) {
+                return false;
+            }
+            
+            const areEqual = line1.wayPoints.every((point, index) => {
+                const otherPoint = line2.wayPoints[index];
+                return point[0] === otherPoint[0] && point[1] === otherPoint[1];
+            });
+            return areEqual;
+        }
+        
+        // If both have SVG path data (d attribute), compare those
+        if (line1.d && line2.d) {
+            return line1.d === line2.d;
+        }
+        
+        // If one has wayPoints and the other has d, they're different types
+        if ((line1.wayPoints && line2.d) || (line1.d && line2.wayPoints)) {
+            return false;
+        }
+        
+        // If neither has wayPoints nor d, they might be equal if other properties match
+        // This is a fallback - we'll compare color and thickness as identifiers
+        const result = line1.color === line2.color && 
+                      line1.thickness === line2.thickness &&
+                      JSON.stringify(line1) === JSON.stringify(line2);
+        return result;
     }
     
     convertToHex8(hex6Color) {
