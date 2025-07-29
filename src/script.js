@@ -6,6 +6,7 @@ class SudokuAccessoriser {
         
         this.initializeTheme();
         this.initializeEventListeners();
+        this.checkForPuzzleParameter();
     }
 
     initializeEventListeners() {
@@ -14,11 +15,14 @@ class SudokuAccessoriser {
         urlForm.addEventListener('submit', (e) => this.handleUrlSubmit(e));
 
         // Navigation buttons
-        document.getElementById('back-to-url').addEventListener('click', () => this.showStep(1));
+        document.getElementById('back-to-url').addEventListener('click', () => this.goBackToUrl());
         document.getElementById('preview-puzzle').addEventListener('click', () => this.openCustomizedPuzzle());
         
         // Theme toggle
         document.getElementById('theme-toggle').addEventListener('click', () => this.toggleTheme());
+        
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', () => this.handlePopState());
     }
 
     async handleUrlSubmit(e) {
@@ -42,6 +46,10 @@ class SudokuAccessoriser {
             this.puzzleData = await this.extractPuzzleData(puzzleUrl);
             this.populateFeatures();
             this.showStep(2);
+            
+            // Update URL parameter to reflect current puzzle
+            this.updateUrlParameter('puzzle', this.extractPuzzleIdFromUrl(puzzleUrl));
+            
         } catch (error) {
             this.showError('Failed to load puzzle data: ' + error.message);
         }
@@ -149,6 +157,107 @@ class SudokuAccessoriser {
         return hexColor;
     }
 
+    getUrlParameter(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+    }
+
+    async checkForPuzzleParameter() {
+        const puzzleParam = this.getUrlParameter('puzzle');
+        
+        if (puzzleParam) {
+            console.log('Found puzzle parameter:', puzzleParam);
+            
+            // Convert parameter to full URL if it's just an ID
+            const puzzleUrl = this.normalizePuzzleUrl(puzzleParam);
+            
+            // Pre-populate the URL input
+            const urlInput = document.getElementById('puzzle-url');
+            if (urlInput) {
+                urlInput.value = puzzleUrl;
+            }
+            
+            // Auto-load the puzzle
+            await this.autoLoadPuzzle(puzzleUrl);
+        }
+    }
+
+    normalizePuzzleUrl(puzzleParam) {
+        // If it's already a full URL, return as-is
+        if (puzzleParam.startsWith('http://') || puzzleParam.startsWith('https://')) {
+            return puzzleParam;
+        }
+        
+        // If it contains a slash, it might be a custom URL like "pdyxs/whispers-in-the-mist"
+        if (puzzleParam.includes('/')) {
+            return `https://sudokupad.app/${puzzleParam}`;
+        }
+        
+        // Otherwise, treat it as a simple puzzle ID
+        return `https://sudokupad.app/${puzzleParam}`;
+    }
+
+    async autoLoadPuzzle(puzzleUrl) {
+        if (!this.isValidSudokuPadUrl(puzzleUrl)) {
+            console.error('Invalid puzzle URL from parameter:', puzzleUrl);
+            this.showError('Invalid puzzle URL in link parameter');
+            return;
+        }
+
+        try {
+            this.showLoading('Loading puzzle from URL parameter...');
+            this.puzzleData = await this.extractPuzzleData(puzzleUrl);
+            this.populateFeatures();
+            this.showStep(2);
+            
+            // Update URL to reflect current state
+            this.updateUrlParameter('puzzle', this.extractPuzzleIdFromUrl(puzzleUrl));
+            
+        } catch (error) {
+            console.error('Failed to auto-load puzzle:', error);
+            this.showError('Failed to load puzzle from URL parameter: ' + error.message);
+        }
+    }
+
+    extractPuzzleIdFromUrl(url) {
+        // Extract just the puzzle ID part for cleaner URL parameters
+        return PuzzleConverter.extractPuzzleId(url) || url;
+    }
+
+    updateUrlParameter(name, value) {
+        const url = new URL(window.location);
+        if (value) {
+            url.searchParams.set(name, value);
+        } else {
+            url.searchParams.delete(name);
+        }
+        window.history.pushState({}, '', url);
+    }
+
+    handlePopState() {
+        // Handle browser back/forward button navigation
+        const puzzleParam = this.getUrlParameter('puzzle');
+        
+        if (puzzleParam && !this.puzzleData) {
+            // URL has puzzle parameter but no puzzle loaded - auto-load it
+            this.checkForPuzzleParameter();
+        } else if (!puzzleParam && this.puzzleData) {
+            // No puzzle parameter but puzzle is loaded - go back to step 1
+            this.puzzleData = null;
+            this.resetLoadingState(); // Clear any loading state
+            this.showStep(1);
+        }
+    }
+
+    goBackToUrl() {
+        // Clear puzzle data and URL parameter, return to step 1
+        this.puzzleData = null;
+        this.customizations = {};
+        this.updateUrlParameter('puzzle', null); // Remove puzzle parameter
+        this.resetLoadingState(); // Clear any loading state
+        this.showStep(1);
+    }
+
     updateCustomization(featureIndex, property, value) {
         if (!this.customizations[featureIndex]) {
             this.customizations[featureIndex] = {};
@@ -215,6 +324,15 @@ class SudokuAccessoriser {
         const button = document.querySelector('button[type="submit"]');
         button.disabled = false;
         button.textContent = 'Load Puzzle';
+    }
+
+    resetLoadingState() {
+        // Reset the submit button to its normal state
+        const button = document.querySelector('button[type="submit"]');
+        if (button) {
+            button.disabled = false;
+            button.textContent = 'Load Puzzle';
+        }
     }
 
     delay(ms) {
