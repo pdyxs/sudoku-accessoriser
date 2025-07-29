@@ -17,6 +17,7 @@ class SudokuAccessoriser {
         // Navigation buttons
         document.getElementById('back-to-url').addEventListener('click', () => this.goBackToUrl());
         document.getElementById('preview-puzzle').addEventListener('click', () => this.openCustomizedPuzzle());
+        document.getElementById('open-puzzle').addEventListener('click', () => this.openCustomizedPuzzle());
         
         // Theme toggle
         document.getElementById('theme-toggle').addEventListener('click', () => this.toggleTheme());
@@ -311,18 +312,107 @@ class SudokuAccessoriser {
     }
 
     openCustomizedPuzzle() {
-        // Stub implementation - this will generate the actual customized puzzle URL
-        const customizedUrl = this.generateCustomizedPuzzleUrl();
-        window.open(customizedUrl, '_blank');
+        try {
+            console.log('Opening customized puzzle...');
+            const customizedUrl = this.generateCustomizedPuzzleUrl();
+            
+            if (customizedUrl) {
+                console.log('Generated customized URL:', customizedUrl);
+                window.open(customizedUrl, '_blank');
+            } else {
+                this.showError('Failed to generate customized puzzle URL');
+            }
+        } catch (error) {
+            console.error('Error opening customized puzzle:', error);
+            this.showError('Failed to open customized puzzle: ' + error.message);
+        }
     }
 
     generateCustomizedPuzzleUrl() {
-        // Stub implementation - this will be replaced with actual URL generation
-        const originalUrl = document.getElementById('puzzle-url').value;
+        if (!this.puzzleData || !this.puzzleData.originalData) {
+            console.error('No puzzle data available for customization');
+            return null;
+        }
+
         console.log('Generating customized puzzle with:', this.customizations);
         
-        // For now, just return the original URL with a parameter
-        return originalUrl + '&customized=true';
+        try {
+            // Create a deep copy of the original puzzle data
+            const customizedPuzzle = JSON.parse(JSON.stringify(this.puzzleData.originalData));
+            
+            // Apply customizations to the puzzle data
+            this.applyCustomizations(customizedPuzzle);
+            
+            // Generate a new SudokuPad URL with the customized puzzle
+            return this.createSudokuPadUrl(customizedPuzzle);
+            
+        } catch (error) {
+            console.error('Failed to generate customized puzzle:', error);
+            return null;
+        }
+    }
+
+    applyCustomizations(puzzleData) {
+        // Apply customizations to each feature group
+        Object.keys(this.customizations).forEach(featureIndex => {
+            const customization = this.customizations[featureIndex];
+            const feature = this.puzzleData.features[parseInt(featureIndex)];
+            
+            if (!feature || feature.category !== 'lines') {
+                return; // Skip non-line features for now
+            }
+            
+            // Apply color customization to all lines in this feature group
+            if (customization.color) {
+                feature.lines.forEach(line => {
+                    // Find the corresponding line in the puzzle data and update its color
+                    const puzzleLine = puzzleData.lines.find(pLine => 
+                        this.areLinesEqual(pLine, line)
+                    );
+                    if (puzzleLine) {
+                        // Convert 6-character hex back to 8-character hex with alpha
+                        puzzleLine.color = this.convertToHex8(customization.color);
+                    }
+                });
+            }
+        });
+    }
+    
+    areLinesEqual(line1, line2) {
+        // Compare lines by their waypoints to identify the same line
+        if (!line1.wayPoints || !line2.wayPoints) return false;
+        if (line1.wayPoints.length !== line2.wayPoints.length) return false;
+        
+        return line1.wayPoints.every((point, index) => {
+            const otherPoint = line2.wayPoints[index];
+            return point[0] === otherPoint[0] && point[1] === otherPoint[1];
+        });
+    }
+    
+    convertToHex8(hex6Color) {
+        // Convert 6-character hex color back to 8-character hex with full opacity
+        if (hex6Color && hex6Color.length === 7 && hex6Color.startsWith('#')) {
+            return hex6Color + 'ff'; // Add full opacity
+        }
+        return hex6Color;
+    }
+
+    createSudokuPadUrl(puzzleData) {
+        try {
+            // Use PuzzleConverter utilities to compress and encode the puzzle
+            const compressedData = PuzzleZipper.zip(JSON.stringify(puzzleData));
+            const encodedData = loadFPuzzle.compressPuzzle(compressedData);
+            
+            // Create SCL format puzzle ID
+            const sclPuzzleId = 'scl' + encodedData;
+            
+            // Generate SudokuPad URL using SCF format with puzzleid parameter
+            return `https://sudokupad.app/scf?puzzleid=${encodeURIComponent(sclPuzzleId)}`;
+            
+        } catch (error) {
+            console.error('Failed to create SudokuPad URL:', error);
+            throw error;
+        }
     }
 
     showLoading(message) {
