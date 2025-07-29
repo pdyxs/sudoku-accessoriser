@@ -23,3 +23,24 @@ The flow of the website is as follows:
 2. The user is shown a list of different features in the puzzles (e.g. lines of different colours)
 3. The user is able to customise how each of those features is displayed (e.g. change the colours, make a line hollow, add a text annotation)
 4. The user is able to open the altered puzzle in a new tab.
+
+## Version Management
+
+The application displays a version number in the header to help track deployments. When making significant changes or deploying updates:
+
+1. **Update the version number** in `index.html` (line ~16):
+   ```html
+   <span class="version">v1.0.0</span>
+   ```
+
+2. **Version numbering scheme**:
+   - **Major version** (v2.0.0): Breaking changes or major new features
+   - **Minor version** (v1.1.0): New features, significant improvements
+   - **Patch version** (v1.0.1): Bug fixes, small improvements
+
+3. **When to update**:
+   - Before deploying to GitHub Pages
+   - After completing major features or bug fixes
+   - When making changes that users should be aware of
+
+This helps verify that deployments have succeeded and provides users with a reference for the current version.
