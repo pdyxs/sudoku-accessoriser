@@ -71,10 +71,17 @@
             addResult('Testing Customization', '<p>Applying red color to first feature...</p>');
             
             try {
-                const testApp = new SudokuAccessoriser();
-                testApp.puzzleData = window.testPuzzleData;
-                testApp.customizations = {
-                    0: { color: '#ff0000' } // Change first feature to red
+                // Create a minimal test object with just the customization methods
+                const testApp = {
+                    puzzleData: window.testPuzzleData,
+                    customizations: {
+                        0: { color: '#ff0000' } // Change first feature to red
+                    },
+                    
+                    // Copy the customization methods from SudokuAccessoriser
+                    applyCustomizations: SudokuAccessoriser.prototype.applyCustomizations,
+                    areLinesEqual: SudokuAccessoriser.prototype.areLinesEqual,
+                    convertToHex8: SudokuAccessoriser.prototype.convertToHex8
                 };
                 
                 // Create a copy of original data for testing
@@ -90,7 +97,7 @@
                 
                 // Apply customizations
                 console.log('Applying customizations...');
-                testApp.applyCustomizations(puzzleCopy);
+                testApp.applyCustomizations.call(testApp, puzzleCopy);
                 
                 const newColors = puzzleCopy.lines.map(l => l.color);
                 const changedCount = originalColors.filter((color, i) => color !== newColors[i]).length;
