@@ -131,73 +131,63 @@ class PuzzleConverter {
 }
 ```
 
-### Phase 4: Analyze and Improve Feature Format
-Now that we have **real puzzle data**, design the feature format based on actual SudokuPad structure:
+### Phase 4: Implement Line Feature Extraction and Color Customization ✅ IN PROGRESS
+Focus on lines only initially, with full color replacement functionality:
 
 **Real Data Analysis from sample-sudokupad.json:**
 - **Lines**: `wayPoints` coordinates, `color` (RGBA hex), `thickness` (decimal)
-- **Underlays**: `center` coordinates, `width/height`, `backgroundColor` (RGBA hex)  
-- **Cages**: Array (empty in sample, but structure available)
-- **Regions**: Arrays of `[row, col]` coordinate pairs
-- **Metadata**: `title`, `author`, `rules`, `solution`
+- Two color groups: Green `#67f067ff` (5 lines) and Purple `#f067f0ff` (5 lines)
+- Rules mention: "German Whispers, and Renban rules"
 
-**Updated Enhanced Format Based on Real Data:**
+**Priority: Get basic color replacement working end-to-end before rule matching**
+
+**Line Feature Format for Initial Implementation:**
 ```javascript
 {
-  id: "lines-group-1", // Feature group identifier
-  category: "lines", // Top-level category: lines, underlays, cages, regions
-  type: "whispers", // Specific constraint type (detect from color/thickness patterns)
-  name: "German Whispers Lines", // Human-readable name
-  description: "Lines where adjacent values differ by at least 5",
-  count: 5, // Number of individual line segments
+  category: "lines",
+  count: 5, // Number of individual line segments with this color
   
   // Visual properties extracted from real data
   visual: {
     color: "#67f067ff", // Actual RGBA color from puzzle
-    thickness: 9.6, // Actual thickness from puzzle
-    opacity: 100 // Extracted from alpha channel
+    thickness: 9.6 // Actual thickness from puzzle
   },
   
-  // Customization options tailored to real properties
+  // Customization options - focus on color only initially
   customizable: {
     color: { 
       type: "color", 
-      default: "#67f067ff",
-      extractAlpha: true // Handle RGBA properly
-    },
-    thickness: { 
-      type: "range", 
-      min: 1, 
-      max: 20, 
-      step: 0.1,
-      default: 9.6 
-    },
-    style: { 
-      type: "select", 
-      options: ["solid", "dashed", "dotted"], 
-      default: "solid" 
+      default: "#67f067ff" // Current color
     }
   },
   
-  // Original data for reconstruction
-  originalData: [
-    {"wayPoints": [[5.5, 6.5], [3.5, 6.5]], "color": "#67f067ff", "thickness": 9.6},
-    // ... more line segments
-  ],
-  
-  // Coordinate information for positioning
-  coordinates: {
-    bounds: { minX: 0.5, maxX: 8.5, minY: 0.5, maxY: 8.5 },
-    segments: 5 // Number of line segments
-  }
+  // Original line data for reconstruction
+  lines: [
+    {"wayPoints": [[5.5, 6.5], [3.5, 6.5], [3.5, 7.5], [5.5, 7.5]], "color": "#67f067ff", "thickness": 9.6},
+    {"wayPoints": [[6.5, 3.5], [5.5, 4.5], [6.5, 5.5]], "color": "#67f067ff", "thickness": 9.6},
+    {"wayPoints": [[6.5, 2.5], [4.5, 2.5]], "color": "#67f067ff", "thickness": 9.6},
+    {"wayPoints": [[7.5, 2.5], [8.5, 3.5]], "color": "#67f067ff", "thickness": 9.6},
+    {"wayPoints": [[0.5, 5.5], [2.5, 7.5]], "color": "#67f067ff", "thickness": 9.6}
+  ]
 }
 ```
+**Phase 4A: Basic Line Grouping (Current Focus)**
+1. **Group by Color**: Lines with same color = one feature group
+2. **Extract Visual Properties**: Store original color and thickness for each group
+3. **Color Customization**: Allow users to change the color of each group
+4. **Puzzle Reconstruction**: Update all lines in a group with the new color
 
-**Feature Detection Strategy:**
-1. **Group by Color**: Lines with same color = same constraint type
-2. **Infer Constraint Type**: Green (#67f067ff) = German Whispers, Pink (#f067f0ff) = Renban
-3. **Analyze Thickness**: Different thicknesses might indicate different constraint types
-4. **Handle Underlays**: Cell backgrounds for special regions or clues
+**Implementation Steps:**
+1. Parse `puzzleData.lines` array from sample-sudokupad.json
+2. Group lines by their `color` property
+3. Create feature objects for each color group
+4. Build UI for color customization
+5. Implement puzzle reconstruction with updated colors
+
+**Phase 4B: Rule Matching (Future Enhancement)**
+- Use puzzle database to map colors to standard constraint names
+- Cross-reference with rule descriptions
+- Advanced color-to-description matching
 
 ### Phase 5: Complete Conversion Module
 After testing and feature format design, complete the `PuzzleConverter` class:

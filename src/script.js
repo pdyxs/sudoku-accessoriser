@@ -48,53 +48,32 @@ class SudokuAccessoriser {
     }
 
     isValidSudokuPadUrl(url) {
-        try {
-            const urlObj = new URL(url);
-            return urlObj.hostname === 'sudokupad.app' || 
-                   urlObj.hostname === 'www.sudokupad.app';
-        } catch {
-            return false;
-        }
+        // Use PuzzleConverter's validation which handles more URL formats
+        return PuzzleConverter.isValidSudokuPadUrl(url);
     }
 
     async extractPuzzleData(puzzleUrl) {
-        // Stub implementation - this will be replaced with actual data extraction
-        console.log('Extracting data from:', puzzleUrl);
-        await this.delay(1000); // Simulate network delay
+        console.log('Extracting puzzle data from:', puzzleUrl);
         
-        return {
-            title: "Sample Puzzle",
-            features: [
-                {
-                    type: "line",
-                    name: "Thermometer Lines",
-                    color: "#ff6b6b",
-                    count: 3,
-                    customizable: ["color", "style", "thickness"]
-                },
-                {
-                    type: "region",
-                    name: "Killer Cages",
-                    color: "#4ecdc4",
-                    count: 8,
-                    customizable: ["color", "opacity", "border"]
-                },
-                {
-                    type: "arrow",
-                    name: "Direction Arrows",
-                    color: "#45b7d1",
-                    count: 5,
-                    customizable: ["color", "size", "style"]
-                },
-                {
-                    type: "circle",
-                    name: "Constraint Circles",
-                    color: "#96ceb4",
-                    count: 12,
-                    customizable: ["color", "size", "fill"]
-                }
-            ]
-        };
+        try {
+            // Use the PuzzleConverter to extract real puzzle data
+            const puzzleData = await PuzzleConverter.convertSudokuPadUrl(puzzleUrl);
+            
+            console.log('Successfully extracted puzzle data:', puzzleData);
+            
+            return {
+                title: puzzleData.title,
+                puzzleId: puzzleData.puzzleId,
+                originalData: puzzleData.originalData,
+                features: puzzleData.features,
+                totalLines: puzzleData.totalLines,
+                featureGroups: puzzleData.featureGroups
+            };
+            
+        } catch (error) {
+            console.error('Failed to extract puzzle data:', error);
+            throw new Error(`Failed to extract puzzle data: ${error.message}`);
+        }
     }
 
     populateFeatures() {
@@ -105,7 +84,7 @@ class SudokuAccessoriser {
         const featuresContainer = document.getElementById('features-list');
         featuresContainer.innerHTML = '';
 
-        if (!this.puzzleData || !this.puzzleData.features) {
+        if (!this.puzzleData || !this.puzzleData.features || this.puzzleData.features.length === 0) {
             featuresContainer.innerHTML = '<p>No customizable features found in this puzzle.</p>';
             return;
         }
@@ -119,10 +98,15 @@ class SudokuAccessoriser {
     createFeatureElement(feature, index) {
         const featureDiv = document.createElement('div');
         featureDiv.className = 'feature-item';
+        
+        // Create a display name for the feature based on its properties
+        const displayName = `${feature.category.charAt(0).toUpperCase() + feature.category.slice(1)} (x${feature.count})`;
+        const color = feature.visual.color;
+        
         featureDiv.innerHTML = `
             <div class="feature-header">
-                <span class="feature-name">${feature.name} (${feature.count})</span>
-                <div class="feature-preview" style="background-color: ${feature.color}"></div>
+                <span class="feature-name">${displayName}</span>
+                <div class="feature-preview" style="background-color: ${color}"></div>
             </div>
             <div class="feature-controls">
                 ${this.createFeatureControls(feature, index)}
@@ -135,62 +119,34 @@ class SudokuAccessoriser {
     createFeatureControls(feature, index) {
         let controls = '';
 
-        if (feature.customizable.includes('color')) {
+        // Our new feature format has customizable as an object
+        if (feature.customizable && feature.customizable.color) {
+            const colorControl = feature.customizable.color;
+            // Convert 8-character hex (with alpha) to 6-character hex for HTML color input
+            const hexColor = this.convertToHex6(colorControl.default);
             controls += `
                 <div class="control-group">
                     <label>Color:</label>
-                    <input type="color" value="${feature.color}" 
+                    <input type="color" value="${hexColor}" 
                            onchange="app.updateCustomization(${index}, 'color', this.value)">
                 </div>
             `;
         }
 
-        if (feature.customizable.includes('style')) {
-            controls += `
-                <div class="control-group">
-                    <label>Style:</label>
-                    <select onchange="app.updateCustomization(${index}, 'style', this.value)">
-                        <option value="solid">Solid</option>
-                        <option value="dashed">Dashed</option>
-                        <option value="dotted">Dotted</option>
-                        <option value="hollow">Hollow</option>
-                    </select>
-                </div>
-            `;
-        }
-
-        if (feature.customizable.includes('thickness') || feature.customizable.includes('size')) {
-            const label = feature.customizable.includes('thickness') ? 'Thickness' : 'Size';
-            controls += `
-                <div class="control-group">
-                    <label>${label}:</label>
-                    <input type="range" min="1" max="10" value="5" 
-                           onchange="app.updateCustomization(${index}, '${label.toLowerCase()}', this.value)">
-                </div>
-            `;
-        }
-
-        if (feature.customizable.includes('opacity')) {
-            controls += `
-                <div class="control-group">
-                    <label>Opacity:</label>
-                    <input type="range" min="0" max="100" value="100" 
-                           onchange="app.updateCustomization(${index}, 'opacity', this.value)">
-                </div>
-            `;
-        }
-
-        if (feature.customizable.includes('text')) {
-            controls += `
-                <div class="control-group">
-                    <label>Text:</label>
-                    <input type="text" placeholder="Add annotation..." 
-                           onchange="app.updateCustomization(${index}, 'text', this.value)">
-                </div>
-            `;
-        }
+        // For now, we only support color customization for lines
+        // Additional controls can be added later
 
         return controls;
+    }
+
+    convertToHex6(hexColor) {
+        // Convert 8-character hex color (with alpha) to 6-character hex for HTML color input
+        if (hexColor && hexColor.length === 9 && hexColor.startsWith('#')) {
+            // Remove the alpha channel (last 2 characters)
+            return hexColor.substring(0, 7);
+        }
+        // Return as-is if it's already 6-character hex or invalid format
+        return hexColor;
     }
 
     updateCustomization(featureIndex, property, value) {

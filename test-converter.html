@@ -83,15 +83,13 @@
                 addResult('Conversion', 'success', 'Puzzle converted successfully!', 
                     `Title: ${result.title}\n` +
                     `Puzzle ID: ${result.puzzleId}\n` +
-                    `Data type: ${result.dataType}\n` +
-                    `Has grid: ${result.hasGrid ? 'Yes' : 'No'}\n` +
-                    `Has lines: ${result.hasLines ? 'Yes' : 'No'}\n` +
-                    `Has regions: ${result.hasRegions ? 'Yes' : 'No'}\n` +
-                    `Has cages: ${result.hasCages ? 'Yes' : 'No'}\n` +
-                    `Lines count: ${result.originalData?.lines?.length || 'N/A'}\n` +
-                    `Regions count: ${result.originalData?.regions?.length || 'N/A'}\n` +
-                    `Sample data keys: ${Object.keys(result.originalData || {}).slice(0, 10).join(', ')}\n` +
-                    `Sample JSON: ${JSON.stringify(result.originalData).substring(0, 400)}...`
+                    `Total Lines: ${result.totalLines}\n` +
+                    `Feature Groups: ${result.featureGroups}\n\n` +
+                    `LINE FEATURES:\n` +
+                    result.features.map(feature => 
+                        `- Color: ${feature.visual.color} (${feature.count} lines, thickness: ${feature.visual.thickness})`
+                    ).join('\n') + 
+                    `\n\nFull JSON: ${JSON.stringify(result, null, 2).substring(0, 1000)}...`
                 );
                 
             } catch (error) {

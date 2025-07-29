@@ -73,26 +73,82 @@ class PuzzleConverter {
       console.log('Final data type:', typeof finalData);
       console.log('Final data sample:', JSON.stringify(finalData).substring(0, 200));
       
-      // Return basic structure for testing - processPuzzleData will be added later
-      return {
-        title: finalData.title || finalData.metadata?.title || finalData.name || "SudokuPad Puzzle",
-        originalData: finalData,
-        puzzleId: puzzleId,
-        dataType: typeof finalData,
-        // Add some diagnostic info
-        hasGrid: !!finalData.grid,
-        hasLines: !!finalData.lines,
-        hasRegions: !!finalData.regions,
-        hasCages: !!finalData.cages,
-        // Include processed data for debugging
-        processedPuzzleId: processedPuzzleId,
-        wasRemote: PuzzleLoader.isRemotePuzzleId(puzzleId.split('?')[0].split('&')[0]),
-        // features will be added in Phase 5 after format improvement
-      };
+      // Process puzzle data to extract line features
+      return this.processPuzzleData(finalData, puzzleId);
     } catch (error) {
       console.error('Failed to resolve puzzle data:', error);
       throw new Error(`Failed to load puzzle: ${error.message}`);
     }
+  }
+  
+  static processPuzzleData(puzzleData, puzzleId) {
+    console.log('Processing puzzle data for line features...');
+    
+    // Extract line features by grouping lines by color
+    const lineFeatures = this.extractLineFeatures(puzzleData);
+    
+    return {
+      title: puzzleData.metadata?.title || puzzleData.title || "SudokuPad Puzzle",
+      puzzleId: puzzleId,
+      originalData: puzzleData,
+      features: lineFeatures,
+      // Diagnostic info
+      totalLines: puzzleData.lines?.length || 0,
+      featureGroups: lineFeatures.length
+    };
+  }
+  
+  static extractLineFeatures(puzzleData) {
+    if (!puzzleData.lines || !Array.isArray(puzzleData.lines)) {
+      console.log('No lines found in puzzle data');
+      return [];
+    }
+    
+    console.log(`Found ${puzzleData.lines.length} total lines`);
+    
+    // Group lines by color
+    const colorGroups = {};
+    
+    puzzleData.lines.forEach(line => {
+      const color = line.color;
+      if (!colorGroups[color]) {
+        colorGroups[color] = [];
+      }
+      colorGroups[color].push(line);
+    });
+    
+    console.log(`Grouped lines into ${Object.keys(colorGroups).length} color groups:`, Object.keys(colorGroups));
+    
+    // Convert color groups to feature format
+    const features = Object.keys(colorGroups).map(color => {
+      const lines = colorGroups[color];
+      
+      return {
+        category: "lines",
+        count: lines.length,
+        
+        // Visual properties extracted from first line (assuming all lines in group have same properties)
+        visual: {
+          color: color,
+          thickness: lines[0].thickness
+        },
+        
+        // Customization options - focus on color only initially
+        customizable: {
+          color: { 
+            type: "color", 
+            default: color
+          }
+        },
+        
+        // Original line data for reconstruction
+        lines: lines
+      };
+    });
+    
+    console.log(`Created ${features.length} line features:`, features.map(f => `${f.visual.color} (${f.count} lines)`));
+    
+    return features;
   }
   
   static extractPuzzleId(url) {
