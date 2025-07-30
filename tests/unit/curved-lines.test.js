@@ -20,7 +20,7 @@ describe('Curved Lines Support', () => {
     moduleLoader = setupSudokuPadEnvironment();
     
     // Load the curved example data
-    const curvedFilePath = path.resolve(process.cwd(), 'example-curved.json');
+    const curvedFilePath = path.resolve(process.cwd(), 'examples/example-curved.json');
     const curvedFileContent = fs.readFileSync(curvedFilePath, 'utf8');
     curvedExampleData = JSON.parse(curvedFileContent);
   });

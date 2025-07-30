@@ -90,7 +90,8 @@ describe('PuzzleConverter', () => {
   - Input validation with real-time feedback
 
 ### **4. Development Workflow Enhancement**
-- **Remove**: All `test-*.html` and `debug-*.html` files from root
+- **Remove**: All `test-*.html` files from root (completed)
+- **Organize**: Move `debug-*.html` files to `debug/` folder (completed)
 - **Add enhanced package.json scripts**:
 ```json
 "scripts": {

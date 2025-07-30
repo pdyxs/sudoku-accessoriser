@@ -56,6 +56,24 @@ All project notes, plans, and documentation should be stored in the `docs/notes/
 
 Always save documentation files to `docs/notes/` rather than the project root to maintain a clean project structure.
 
+## Project Organization
+
+### Debug Files
+All debug and development HTML files should be stored in the `debug/` folder:
+- Debug utilities: `debug/debug-*.html`
+- Development testing tools
+- Temporary development files
+
+### Example Data
+All example JSON files and sample data should be stored in the `examples/` folder:
+- Puzzle examples: `examples/sample-sudokupad.json`, `examples/example-curved.json`
+- Test data samples
+- Reference data files
+
+When creating new debug tools or example files, always place them in the appropriate folder to maintain project organization.
+
+## Project Completion Workflow
+
 When a project or major task is completed (e.g. sudokupad-conversion-plan, JEST migration, HTML tests migration, cleanup tasks), always:
 1. **Mark completion status** in the relevant documentation file by adding a completion date and status
 2. **Update version number** in `index.html` if the changes are significant enough to warrant a version bump
