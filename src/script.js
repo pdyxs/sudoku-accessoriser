@@ -1,10 +1,13 @@
 class SudokuAccessoriser {
     constructor() {
-        this.currentStep = 1;
         this.puzzleData = null;
-        this.customizations = {};
         
-        this.initializeTheme();
+        // Initialize component classes
+        this.puzzleLoader = new PuzzleLoader();
+        this.featureManager = new FeatureManager();
+        this.uiController = new UIController();
+        this.themeManager = new ThemeManager();
+        
         this.initializeEventListeners();
         this.checkForPuzzleParameter();
     }
@@ -20,7 +23,7 @@ class SudokuAccessoriser {
         document.getElementById('open-puzzle').addEventListener('click', () => this.openCustomizedPuzzle());
         
         // Theme toggle
-        document.getElementById('theme-toggle').addEventListener('click', () => this.toggleTheme());
+        document.getElementById('theme-toggle').addEventListener('click', () => this.themeManager.toggleTheme());
         
         // Handle browser back/forward buttons
         window.addEventListener('popstate', () => this.handlePopState());
@@ -29,147 +32,47 @@ class SudokuAccessoriser {
     async handleUrlSubmit(e) {
         e.preventDefault();
         
-        const urlInput = document.getElementById('puzzle-url');
-        const puzzleUrl = urlInput.value.trim();
+        const puzzleUrl = this.uiController.getPuzzleUrlInput();
         
         if (!puzzleUrl) {
-            this.showError('Please enter a puzzle URL');
+            this.uiController.showError('Please enter a puzzle URL');
             return;
         }
 
-        if (!this.isValidSudokuPadUrl(puzzleUrl)) {
-            this.showError('Please enter a valid SudokuPad URL');
+        if (!this.puzzleLoader.isValidSudokuPadUrl(puzzleUrl)) {
+            this.uiController.showError('Please enter a valid SudokuPad URL');
             return;
         }
 
         try {
-            this.showLoading('Loading puzzle data...');
-            this.puzzleData = await this.extractPuzzleData(puzzleUrl);
+            this.uiController.showLoading('Loading puzzle data...');
+            this.puzzleData = await this.puzzleLoader.extractPuzzleData(puzzleUrl);
             this.populateFeatures();
-            this.showStep(2);
+            this.uiController.showStep(2);
             
             // Update URL parameter to reflect current puzzle
-            this.updateUrlParameter('puzzle', this.extractPuzzleIdFromUrl(puzzleUrl));
+            this.puzzleLoader.updateUrlParameter('puzzle', this.puzzleLoader.extractPuzzleIdFromUrl(puzzleUrl));
             
         } catch (error) {
-            this.showError('Failed to load puzzle data: ' + error.message);
+            this.uiController.showError('Failed to load puzzle data: ' + error.message);
         }
     }
 
-    isValidSudokuPadUrl(url) {
-        // Use PuzzleConverter's validation which handles more URL formats
-        return PuzzleConverter.isValidSudokuPadUrl(url);
-    }
-
-    async extractPuzzleData(puzzleUrl) {
-        console.log('Extracting puzzle data from:', puzzleUrl);
-        
-        try {
-            // Use the PuzzleConverter to extract real puzzle data
-            const puzzleData = await PuzzleConverter.convertSudokuPadUrl(puzzleUrl);
-            
-            console.log('Successfully extracted puzzle data:', puzzleData);
-            
-            return {
-                title: puzzleData.title,
-                puzzleId: puzzleData.puzzleId,
-                originalData: puzzleData.originalData,
-                features: puzzleData.features,
-                totalLines: puzzleData.totalLines,
-                featureGroups: puzzleData.featureGroups
-            };
-            
-        } catch (error) {
-            console.error('Failed to extract puzzle data:', error);
-            throw new Error(`Failed to extract puzzle data: ${error.message}`);
-        }
-    }
+    // Methods removed - now handled by PuzzleLoader class
 
     populateFeatures() {
         // Update the title to show the puzzle name
-        const titleElement = document.getElementById('puzzle-title');
-        titleElement.textContent = this.puzzleData.title || 'Puzzle Features';
-
-        const featuresContainer = document.getElementById('features-list');
-        featuresContainer.innerHTML = '';
-
-        if (!this.puzzleData || !this.puzzleData.features || this.puzzleData.features.length === 0) {
-            featuresContainer.innerHTML = '<p>No customizable features found in this puzzle.</p>';
-            return;
-        }
-
-        this.puzzleData.features.forEach((feature, index) => {
-            const featureElement = this.createFeatureElement(feature, index);
-            featuresContainer.appendChild(featureElement);
-        });
-    }
-
-    createFeatureElement(feature, index) {
-        const featureDiv = document.createElement('div');
-        featureDiv.className = 'feature-item';
+        this.uiController.updatePuzzleTitle(this.puzzleData.title);
         
-        // Create a display name for the feature based on its properties
-        const displayName = `${feature.category.charAt(0).toUpperCase() + feature.category.slice(1)} (x${feature.count})`;
-        const color = feature.visual.color;
-        
-        featureDiv.innerHTML = `
-            <div class="feature-header">
-                <span class="feature-name">${displayName}</span>
-                <div class="color-previews">
-                    <div class="color-preview-group">
-                        <div class="feature-preview original-preview" title="Original line">
-                            <div class="line-preview original-line" style="background-color: ${color}"></div>
-                        </div>
-                        <span class="color-label">Original</span>
-                    </div>
-                    <div class="color-preview-group">
-                        <div class="feature-preview new-preview" title="New line">
-                            <div class="line-preview new-line" style="background-color: ${color}"></div>
-                        </div>
-                        <span class="color-label">New</span>
-                    </div>
-                </div>
-            </div>
-            <div class="feature-controls">
-                ${this.createFeatureControls(feature, index)}
-            </div>
-        `;
-
-        return featureDiv;
+        // Populate features using UIController
+        this.uiController.populateFeatures(this.puzzleData.features);
     }
 
-    createFeatureControls(feature, index) {
-        let controls = '';
+    // Method removed - now handled by UIController class
 
-        // Our new feature format has customizable as an object
-        if (feature.customizable && feature.customizable.color) {
-            const colorControl = feature.customizable.color;
-            // Convert 8-character hex (with alpha) to 6-character hex for HTML color input
-            const hexColor = this.convertToHex6(colorControl.default);
-            controls += `
-                <div class="control-group">
-                    <label>Color:</label>
-                    <input type="color" value="${hexColor}" 
-                           onchange="app.updateCustomization(${index}, 'color', this.value)">
-                </div>
-            `;
-        }
+    // Method removed - now handled by UIController class
 
-        // For now, we only support color customization for lines
-        // Additional controls can be added later
-
-        return controls;
-    }
-
-    convertToHex6(hexColor) {
-        // Convert 8-character hex color (with alpha) to 6-character hex for HTML color input
-        if (hexColor && hexColor.length === 9 && hexColor.startsWith('#')) {
-            // Remove the alpha channel (last 2 characters)
-            return hexColor.substring(0, 7);
-        }
-        // Return as-is if it's already 6-character hex or invalid format
-        return hexColor;
-    }
+    // Method removed - now handled by UIController and FeatureManager classes
 
     getUrlParameter(name) {
         const urlParams = new URLSearchParams(window.location.search);
@@ -455,66 +358,13 @@ class SudokuAccessoriser {
         }
     }
 
-    showLoading(message) {
-        // Simple loading implementation
-        const button = document.querySelector('button[type="submit"]');
-        button.disabled = true;
-        button.textContent = message;
-    }
-
-    showError(message) {
-        alert(message); // Simple error handling for now
-        
-        // Re-enable the submit button
-        const button = document.querySelector('button[type="submit"]');
-        button.disabled = false;
-        button.textContent = 'Load Puzzle';
-    }
-
-    resetLoadingState() {
-        // Reset the submit button to its normal state
-        const button = document.querySelector('button[type="submit"]');
-        if (button) {
-            button.disabled = false;
-            button.textContent = 'Load Puzzle';
-        }
-    }
+    // Methods removed - now handled by UIController class
 
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    initializeTheme() {
-        // Check for saved theme preference or default to browser preference
-        const savedTheme = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        const theme = savedTheme || (prefersDark ? 'dark' : 'light');
-        this.setTheme(theme);
-        
-        // Listen for browser theme changes
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-            if (!localStorage.getItem('theme')) {
-                this.setTheme(e.matches ? 'dark' : 'light');
-            }
-        });
-    }
-
-    toggleTheme() {
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        this.setTheme(newTheme);
-        localStorage.setItem('theme', newTheme);
-    }
-
-    setTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        
-        const themeIcon = document.querySelector('.theme-icon');
-        if (themeIcon) {
-            themeIcon.textContent = theme === 'light' ? '🌙' : '☀️';
-        }
-    }
+    // Methods removed - now handled by ThemeManager class
 }
 
 // Initialize the application when the page loads

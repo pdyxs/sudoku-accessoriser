@@ -151,9 +151,9 @@ describe('PuzzleConverter', () => {
 1. ✅ Install Jest and jest-environment-jsdom
 2. ✅ Update package.json with test scripts
 3. ✅ Create basic test structure
-4. Migrate URL parsing tests from `test-url-regex.html`
-5. Create API mocks for SudokuPad integration
-6. Remove HTML test files
+4. ✅ Migrate URL parsing tests from `test-url-regex.html`
+5. ✅ Create API mocks for SudokuPad integration
+6. ✅ Remove HTML test files
 
 ### **Phase 2: Code Organization**
 1. Extract PuzzleLoader class from SudokuAccessoriser
