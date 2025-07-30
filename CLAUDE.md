@@ -44,3 +44,20 @@ The application displays a version number in the header to help track deployment
    - When making changes that users should be aware of
 
 This helps verify that deployments have succeeded and provides users with a reference for the current version.
+
+## Documentation
+
+All project notes, plans, and documentation should be stored in the `docs/notes/` folder to keep the project organized. This includes:
+- Improvement plans
+- Implementation notes
+- Analysis documents
+- Technical documentation
+- Any markdown files created during development
+
+Always save documentation files to `docs/notes/` rather than the project root to maintain a clean project structure.
+
+When a project or major task is completed (e.g. sudokupad-conversion-plan, JEST migration, HTML tests migration, cleanup tasks), always:
+1. **Mark completion status** in the relevant documentation file by adding a completion date and status
+2. **Update version number** in `index.html` if the changes are significant enough to warrant a version bump
+3. **Generate documentation** about any new features, utilities, or patterns that might need to be referenced in future work
+4. **Archive completed project notes** by moving them to a `docs/notes/archive/` subfolder to keep track of finished projects while maintaining focus on current work
