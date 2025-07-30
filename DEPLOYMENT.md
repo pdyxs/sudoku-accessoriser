@@ -31,7 +31,7 @@ Your site will be available at: `https://[username].github.io/[repository-name]/
 
 ### Excluded from Deployment:
 - `temp-reference-3/` - Reference repository (excluded via .gitignore)
-- `test-*.html` - Development test files
+- `tests/` - Jest test files (development only)
 - `debug-*.html` - Debug files
 - `node_modules/` - Dependencies
 

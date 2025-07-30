@@ -65,8 +65,14 @@ function mockSudokuPadAPI(url) {
     return Promise.resolve({
       ok: true,
       status: 200,
-      text: () => Promise.resolve(JSON.stringify(mockData.data)),
-      json: () => Promise.resolve(mockData.data)
+      text: () => Promise.resolve(JSON.stringify({
+        ...mockData.data,
+        metadata: { title: mockData.title }
+      })),
+      json: () => Promise.resolve({
+        ...mockData.data,
+        metadata: { title: mockData.title }
+      })
     });
   }
   
