@@ -5,7 +5,7 @@ class ValidationManager {
     constructor() {
         this.validators = new Map();
         this.debounceTimeouts = new Map();
-        this.validationDelay = 500; // ms
+        this.validationDelay = 300; // ms
     }
 
     /**
@@ -273,8 +273,6 @@ class ValidationManager {
                 }
             }
 
-            // Simulate async validation
-            await new Promise(resolve => setTimeout(resolve, 300));
 
             return { 
                 isValid: true, 
