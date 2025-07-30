@@ -1,9 +1,9 @@
 // Test puzzle data fixtures
 
-export const SAMPLE_PUZZLE_URL = 'https://sudokupad.app/psxczr0jpr';
-export const SAMPLE_CUSTOM_URL = 'https://sudokupad.app/pdyxs/whispers-in-the-mist';
+const SAMPLE_PUZZLE_URL = 'https://sudokupad.app/psxczr0jpr';
+const SAMPLE_CUSTOM_URL = 'https://sudokupad.app/pdyxs/whispers-in-the-mist';
 
-export const SAMPLE_PUZZLE_DATA = {
+const SAMPLE_PUZZLE_DATA = {
   title: "Test Puzzle",
   puzzleId: "psxczr0jpr",
   originalData: {
@@ -41,8 +41,16 @@ export const SAMPLE_PUZZLE_DATA = {
   featureGroups: 1
 };
 
-export const MOCK_API_RESPONSES = {
+const MOCK_API_RESPONSES = {
   validPuzzle: JSON.stringify(SAMPLE_PUZZLE_DATA.originalData),
   invalidPuzzle: null,
   networkError: new Error('Network error')
+};
+
+// Export for CommonJS (Jest environment)
+module.exports = {
+  SAMPLE_PUZZLE_URL,
+  SAMPLE_CUSTOM_URL, 
+  SAMPLE_PUZZLE_DATA,
+  MOCK_API_RESPONSES
 };
