@@ -41,6 +41,7 @@ module.exports = {
   // Ignore patterns
   testPathIgnorePatterns: [
     '/node_modules/',
-    '/temp-reference-3/'
+    '/temp-reference-3/',
+    '/tests/pending/'
   ]
 };

@@ -5,6 +5,7 @@
 class UIController {
     constructor() {
         this.currentStep = 1;
+        this.loadingToastId = null; // Track loading toast
     }
 
     /**
@@ -12,18 +13,15 @@ class UIController {
      * @param {number} stepNumber - Step number to show (1, 2, or 3)
      */
     showStep(stepNumber) {
-        // Hide all steps
-        for (let i = 1; i <= 3; i++) {
-            const stepElement = document.getElementById(this.getStepId(i));
-            if (stepElement) {
-                stepElement.style.display = 'none';
-            }
-        }
+        // Hide all steps using existing CSS classes
+        document.querySelectorAll('.step').forEach(step => {
+            step.classList.add('hidden');
+        });
 
         // Show the requested step
         const targetStepElement = document.getElementById(this.getStepId(stepNumber));
         if (targetStepElement) {
-            targetStepElement.style.display = 'block';
+            targetStepElement.classList.remove('hidden');
         }
 
         this.currentStep = stepNumber;
@@ -36,11 +34,11 @@ class UIController {
      */
     getStepId(stepNumber) {
         const stepIds = {
-            1: 'step-1',
-            2: 'step-2',
-            3: 'step-3'
+            1: 'url-input-section',
+            2: 'features-section',
+            3: 'preview-section'
         };
-        return stepIds[stepNumber] || 'step-1';
+        return stepIds[stepNumber] || 'url-input-section';
     }
 
     /**
@@ -164,10 +162,16 @@ class UIController {
      * @param {string} message - Loading message
      */
     showLoading(message) {
+        // Update button state
         const button = document.querySelector('#puzzle-url-form button');
         if (button) {
-            button.textContent = message;
+            button.classList.add('button-loading');
             button.disabled = true;
+        }
+
+        // Show simple loading overlay with spinner (no progress bar)
+        if (window.notificationManager) {
+            window.notificationManager.showLoadingOverlay('Loading', message, false);
         }
     }
 
@@ -179,9 +183,47 @@ class UIController {
         // Reset loading state first
         this.resetLoadingState();
         
-        // Show error (could be enhanced with better UI)
-        alert(message);
+        // Show error toast instead of alert
+        if (window.notificationManager) {
+            window.notificationManager.showError(message);
+        } else {
+            // Fallback to alert if notification manager not available
+            alert(message);
+        }
         console.error(message);
+    }
+
+    /**
+     * Shows success message to user
+     * @param {string} message - Success message
+     */
+    showSuccess(message) {
+        if (window.notificationManager) {
+            window.notificationManager.showSuccess(message);
+        }
+        console.log(message);
+    }
+
+    /**
+     * Shows warning message to user
+     * @param {string} message - Warning message
+     */
+    showWarning(message) {
+        if (window.notificationManager) {
+            window.notificationManager.showWarning(message);
+        }
+        console.warn(message);
+    }
+
+    /**
+     * Shows info message to user
+     * @param {string} message - Info message
+     */
+    showInfo(message) {
+        if (window.notificationManager) {
+            window.notificationManager.showInfo(message);
+        }
+        console.info(message);
     }
 
     /**
@@ -190,8 +232,13 @@ class UIController {
     resetLoadingState() {
         const button = document.querySelector('#puzzle-url-form button');
         if (button) {
-            button.textContent = 'Load Puzzle';
+            button.classList.remove('button-loading');
             button.disabled = false;
+        }
+
+        // Hide loading overlay
+        if (window.notificationManager) {
+            window.notificationManager.hideLoadingOverlay();
         }
     }
 

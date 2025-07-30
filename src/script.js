@@ -1,14 +1,22 @@
 class SudokuAccessoriser {
     constructor() {
         this.puzzleData = null;
+        this.customizations = {};
         
         // Initialize component classes
-        this.puzzleLoader = new PuzzleLoader();
+        this.notificationManager = new NotificationManager();
+        this.validationManager = new ValidationManager();
+        this.puzzleManager = new PuzzleManager();
         this.featureManager = new FeatureManager();
         this.uiController = new UIController();
         this.themeManager = new ThemeManager();
         
+        // Make managers globally available
+        window.notificationManager = this.notificationManager;
+        window.validationManager = this.validationManager;
+        
         this.initializeEventListeners();
+        this.setupValidation();
         this.checkForPuzzleParameter();
     }
 
@@ -29,6 +37,21 @@ class SudokuAccessoriser {
         window.addEventListener('popstate', () => this.handlePopState());
     }
 
+    setupValidation() {
+        // Set up URL validation with real-time feedback
+        this.validationManager.registerValidator(
+            'puzzle-url',
+            this.validationManager.createSudokuPadUrlValidator(),
+            {
+                feedbackId: 'url-feedback',
+                iconId: 'validation-icon',
+                validateOnInput: true,
+                validateOnBlur: true,
+                showSuccess: true
+            }
+        );
+    }
+
     async handleUrlSubmit(e) {
         e.preventDefault();
         
@@ -39,22 +62,55 @@ class SudokuAccessoriser {
             return;
         }
 
-        if (!this.puzzleLoader.isValidSudokuPadUrl(puzzleUrl)) {
-            this.uiController.showError('Please enter a valid SudokuPad URL');
+        // Validate the URL using the validation manager
+        const isValid = await this.validationManager.validateInput('puzzle-url');
+        if (!isValid) {
+            this.uiController.showError('Please correct the URL before proceeding');
             return;
         }
 
         try {
-            this.uiController.showLoading('Loading puzzle data...');
-            this.puzzleData = await this.puzzleLoader.extractPuzzleData(puzzleUrl);
+            this.uiController.showLoading('Loading puzzle...');
+            
+            this.puzzleData = await this.puzzleManager.extractPuzzleData(puzzleUrl);
             this.populateFeatures();
+            
+            // Hide loading and show step 2 immediately when done
+            this.uiController.resetLoadingState();
             this.uiController.showStep(2);
             
             // Update URL parameter to reflect current puzzle
-            this.puzzleLoader.updateUrlParameter('puzzle', this.puzzleLoader.extractPuzzleIdFromUrl(puzzleUrl));
+            this.puzzleManager.updateUrlParameter('puzzle', this.puzzleManager.extractPuzzleIdFromUrl(puzzleUrl));
+            
+            this.uiController.showSuccess(`Loaded puzzle: ${this.puzzleData.title}`);
             
         } catch (error) {
-            this.uiController.showError('Failed to load puzzle data: ' + error.message);
+            // Show different error handling based on error type
+            if (error.errorType) {
+                switch (error.errorType) {
+                    case 'network':
+                        this.uiController.showError(error.message, 8000);
+                        this.showRetryOption(puzzleUrl);
+                        break;
+                    case 'timeout':
+                        this.uiController.showWarning(error.message + ' The operation was automatically retried.', 7000);
+                        this.showRetryOption(puzzleUrl);
+                        break;
+                    case 'not_found':
+                        this.uiController.showError(error.message);
+                        break;
+                    case 'server_error':
+                        this.uiController.showError(error.message, 10000);
+                        this.showRetryOption(puzzleUrl);
+                        break;
+                    default:
+                        this.uiController.showError(error.message);
+                }
+            } else {
+                this.uiController.showError('Failed to load puzzle data: ' + error.message);
+            }
+            
+            console.error('Puzzle loading failed:', error);
         }
     }
 
@@ -115,24 +171,36 @@ class SudokuAccessoriser {
     }
 
     async autoLoadPuzzle(puzzleUrl) {
-        if (!this.isValidSudokuPadUrl(puzzleUrl)) {
+        if (!this.puzzleManager.isValidSudokuPadUrl(puzzleUrl)) {
             console.error('Invalid puzzle URL from parameter:', puzzleUrl);
-            this.showError('Invalid puzzle URL in link parameter');
+            this.uiController.showError('Invalid puzzle URL in link parameter');
             return;
         }
 
         try {
-            this.showLoading('Loading puzzle from URL parameter...');
-            this.puzzleData = await this.extractPuzzleData(puzzleUrl);
+            this.uiController.showLoading('Loading puzzle from link...');
+            
+            this.puzzleData = await this.puzzleManager.extractPuzzleData(puzzleUrl);
             this.populateFeatures();
-            this.showStep(2);
+            
+            // Hide loading and show step 2 immediately when done
+            this.uiController.resetLoadingState();
+            this.uiController.showStep(2);
             
             // Update URL to reflect current state
-            this.updateUrlParameter('puzzle', this.extractPuzzleIdFromUrl(puzzleUrl));
+            this.puzzleManager.updateUrlParameter('puzzle', this.puzzleManager.extractPuzzleIdFromUrl(puzzleUrl));
+            
+            this.uiController.showInfo('Puzzle loaded automatically from URL');
             
         } catch (error) {
             console.error('Failed to auto-load puzzle:', error);
-            this.showError('Failed to load puzzle from URL parameter: ' + error.message);
+            
+            if (error.errorType && ['network', 'timeout', 'server_error'].includes(error.errorType)) {
+                this.uiController.showError(error.message, 8000);
+                this.showRetryOption(puzzleUrl);
+            } else {
+                this.uiController.showError('Failed to load puzzle from URL parameter: ' + error.message);
+            }
         }
     }
 
@@ -161,8 +229,8 @@ class SudokuAccessoriser {
         } else if (!puzzleParam && this.puzzleData) {
             // No puzzle parameter but puzzle is loaded - go back to step 1
             this.puzzleData = null;
-            this.resetLoadingState(); // Clear any loading state
-            this.showStep(1);
+            this.uiController.resetLoadingState(); // Clear any loading state
+            this.uiController.showStep(1);
         }
     }
 
@@ -170,9 +238,9 @@ class SudokuAccessoriser {
         // Clear puzzle data and URL parameter, return to step 1
         this.puzzleData = null;
         this.customizations = {};
-        this.updateUrlParameter('puzzle', null); // Remove puzzle parameter
-        this.resetLoadingState(); // Clear any loading state
-        this.showStep(1);
+        this.puzzleManager.updateUrlParameter('puzzle', null); // Remove puzzle parameter
+        this.uiController.resetLoadingState(); // Clear any loading state
+        this.uiController.showStep(1);
     }
 
     updateCustomization(featureIndex, property, value) {
@@ -191,28 +259,6 @@ class SudokuAccessoriser {
         }
     }
 
-    showStep(stepNumber) {
-        // Hide all steps
-        document.querySelectorAll('.step').forEach(step => {
-            step.classList.add('hidden');
-        });
-
-        // Show the requested step
-        const stepElement = document.getElementById(this.getStepId(stepNumber));
-        if (stepElement) {
-            stepElement.classList.remove('hidden');
-            this.currentStep = stepNumber;
-        }
-    }
-
-    getStepId(stepNumber) {
-        const stepIds = {
-            1: 'url-input-section',
-            2: 'features-section',
-            3: 'preview-section'
-        };
-        return stepIds[stepNumber];
-    }
 
     openCustomizedPuzzle() {
         try {
@@ -222,12 +268,13 @@ class SudokuAccessoriser {
             if (customizedUrl) {
                 console.log('Generated customized URL:', customizedUrl);
                 window.open(customizedUrl, '_blank');
+                this.uiController.showSuccess('Puzzle opened in new tab!');
             } else {
-                this.showError('Failed to generate customized puzzle URL');
+                this.uiController.showError('Failed to generate customized puzzle URL');
             }
         } catch (error) {
             console.error('Error opening customized puzzle:', error);
-            this.showError('Failed to open customized puzzle: ' + error.message);
+            this.uiController.showError('Failed to open customized puzzle: ' + error.message);
         }
     }
 
@@ -359,6 +406,55 @@ class SudokuAccessoriser {
     }
 
     // Methods removed - now handled by UIController class
+
+    /**
+     * Shows a retry option for failed puzzle loading
+     * @param {string} puzzleUrl - The puzzle URL to retry
+     */
+    showRetryOption(puzzleUrl) {
+        // Use a timestamp to create a unique ID for the retry toast
+        const timestamp = Date.now();
+        const retryToastId = `retry-toast-${timestamp}`;
+        
+        this.notificationManager.showToast(
+            'Would you like to try loading the puzzle again?',
+            'info',
+            0, // Don't auto-close
+            {
+                title: 'Retry Available',
+                actions: [
+                    {
+                        text: 'Retry',
+                        style: 'primary',
+                        onclick: `app.retryPuzzleLoad('${puzzleUrl}'); notificationManager.closeToast('${retryToastId}');`
+                    },
+                    {
+                        text: 'Cancel',
+                        style: 'secondary',
+                        onclick: `notificationManager.closeToast('${retryToastId}');`
+                    }
+                ]
+            }
+        );
+    }
+
+    /**
+     * Retries loading a puzzle
+     * @param {string} puzzleUrl - The puzzle URL to retry
+     */
+    async retryPuzzleLoad(puzzleUrl) {
+        console.log('Retrying puzzle load:', puzzleUrl);
+        
+        // Set the URL in the input field
+        this.uiController.setPuzzleUrlInput(puzzleUrl);
+        
+        // Simulate form submission
+        const form = document.getElementById('puzzle-url-form');
+        if (form) {
+            const event = new Event('submit', { bubbles: true, cancelable: true });
+            form.dispatchEvent(event);
+        }
+    }
 
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
