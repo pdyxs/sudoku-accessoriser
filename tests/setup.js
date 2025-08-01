@@ -13,11 +13,11 @@ const localStorageMock = {
 global.localStorage = localStorageMock;
 
 // Mock URLSearchParams for query parameter handling
-global.URLSearchParams = jest.fn().mockImplementation((search) => ({
+global.URLSearchParams = jest.fn().mockImplementation(search => ({
   get: jest.fn().mockReturnValue(null),
   set: jest.fn(),
   delete: jest.fn(),
-  toString: jest.fn().mockReturnValue('')
+  toString: jest.fn().mockReturnValue(''),
 }));
 
 // Mock window.history
@@ -25,7 +25,7 @@ window.history = {
   pushState: jest.fn(),
   replaceState: jest.fn(),
   back: jest.fn(),
-  forward: jest.fn()
+  forward: jest.fn(),
 };
 
 // Mock console.log for cleaner test output (optional)

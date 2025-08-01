@@ -8,17 +8,17 @@ const ModuleLoader = require('./module-loader');
  */
 function setupSudokuPadEnvironment() {
   const loader = new ModuleLoader();
-  
+
   // Load modules in the same order as index.html
   const modules = [
     'src/sudokupad/utilities.js',
-    'src/sudokupad/puzzlezipper.js', 
+    'src/sudokupad/puzzlezipper.js',
     'src/sudokupad/fpuzzlesdecoder.js',
     'src/sudokupad/puzzletools.js',
     'src/sudokupad/puzzleloader.js',
-    'src/puzzle-converter.js'
+    'src/puzzle-converter.js',
   ];
-  
+
   try {
     loader.loadModules(modules);
     return loader;
@@ -37,12 +37,12 @@ function setupSudokuPadMocks() {
     readAsText: jest.fn(),
     onload: null,
     onerror: null,
-    result: null
+    result: null,
   }));
 
   // Mock document methods used by utilities
   if (!global.document.createElement) {
-    global.document.createElement = jest.fn().mockImplementation((tagName) => {
+    global.document.createElement = jest.fn().mockImplementation(tagName => {
       const element = {
         tagName: tagName.toUpperCase(),
         setAttribute: jest.fn(),
@@ -52,15 +52,15 @@ function setupSudokuPadMocks() {
         appendChild: jest.fn(),
         removeChild: jest.fn(),
         innerHTML: '',
-        textContent: ''
+        textContent: '',
       };
-      
+
       // Special handling for anchor elements
       if (tagName === 'a') {
         element.href = '';
         element.download = '';
       }
-      
+
       return element;
     });
   }
@@ -69,23 +69,23 @@ function setupSudokuPadMocks() {
   if (!global.document.body) {
     global.document.body = {
       appendChild: jest.fn(),
-      removeChild: jest.fn()
+      removeChild: jest.fn(),
     };
   }
 
   // Enhance fetch mock for SudokuPad API calls
-  global.fetch = jest.fn().mockImplementation((url) => {
+  global.fetch = jest.fn().mockImplementation(url => {
     // Default mock response
     return Promise.resolve({
       ok: true,
       status: 200,
       text: () => Promise.resolve('{}'),
-      json: () => Promise.resolve({})
+      json: () => Promise.resolve({}),
     });
   });
 }
 
 module.exports = {
   setupSudokuPadEnvironment,
-  setupSudokuPadMocks
+  setupSudokuPadMocks,
 };

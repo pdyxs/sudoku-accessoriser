@@ -19,10 +19,10 @@ describe('Theme Management', () => {
     mockLocalStorage = {
       getItem: jest.fn(),
       setItem: jest.fn(),
-      removeItem: jest.fn()
+      removeItem: jest.fn(),
     };
     Object.defineProperty(window, 'localStorage', {
-      value: mockLocalStorage
+      value: mockLocalStorage,
     });
 
     // Mock matchMedia
@@ -37,7 +37,7 @@ describe('Theme Management', () => {
         addEventListener: jest.fn(),
         removeEventListener: jest.fn(),
         dispatchEvent: jest.fn(),
-      }))
+      })),
     });
   });
 
@@ -45,7 +45,7 @@ describe('Theme Management', () => {
     // Test logic for theme initialization
     const themeAttribute = document.documentElement.getAttribute('data-theme');
     expect(themeAttribute).toBe('light');
-    
+
     const themeIcon = document.querySelector('.theme-icon');
     expect(themeIcon.textContent).toBe('🌙');
   });
@@ -68,32 +68,32 @@ describe('Theme Management', () => {
 
   test('should save theme preference to localStorage', () => {
     // Test localStorage interaction
-    const setTheme = (theme) => {
+    const setTheme = theme => {
       localStorage.setItem('theme', theme);
       document.documentElement.setAttribute('data-theme', theme);
     };
 
     setTheme('dark');
-    
+
     expect(mockLocalStorage.setItem).toHaveBeenCalledWith('theme', 'dark');
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
 
   test('should respect saved theme preference on load', () => {
     mockLocalStorage.getItem.mockReturnValue('dark');
-    
+
     // Simulate initialization with saved theme
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
       document.documentElement.setAttribute('data-theme', savedTheme);
     }
-    
+
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
 
   test('should respect browser dark mode preference when no saved theme', () => {
     mockLocalStorage.getItem.mockReturnValue(null);
-    
+
     // Mock dark mode preference
     window.matchMedia = jest.fn().mockImplementation(query => ({
       matches: query === '(prefers-color-scheme: dark)',
@@ -106,9 +106,11 @@ describe('Theme Management', () => {
       dispatchEvent: jest.fn(),
     }));
 
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const prefersDark = window.matchMedia(
+      '(prefers-color-scheme: dark)'
+    ).matches;
     const theme = prefersDark ? 'dark' : 'light';
-    
+
     expect(theme).toBe('dark');
   });
 });

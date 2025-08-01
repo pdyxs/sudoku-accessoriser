@@ -21,7 +21,9 @@ describe('UIController', () => {
           }
         }
 
-        const targetStepElement = document.getElementById(this.getStepId(stepNumber));
+        const targetStepElement = document.getElementById(
+          this.getStepId(stepNumber)
+        );
         if (targetStepElement) {
           targetStepElement.style.display = 'block';
         }
@@ -33,7 +35,7 @@ describe('UIController', () => {
         const stepIds = {
           1: 'step-1',
           2: 'step-2',
-          3: 'step-3'
+          3: 'step-3',
         };
         return stepIds[stepNumber] || 'step-1';
       }
@@ -47,12 +49,15 @@ describe('UIController', () => {
 
       populateFeatures(features) {
         const featuresContainer = document.getElementById('features-list');
-        if (!featuresContainer) return;
+        if (!featuresContainer) {
+          return;
+        }
 
         featuresContainer.innerHTML = '';
 
         if (!features || features.length === 0) {
-          featuresContainer.innerHTML = '<p>No customizable features found in this puzzle.</p>';
+          featuresContainer.innerHTML =
+            '<p>No customizable features found in this puzzle.</p>';
           return;
         }
 
@@ -65,10 +70,10 @@ describe('UIController', () => {
       createFeatureElement(feature, index) {
         const featureDiv = document.createElement('div');
         featureDiv.className = 'feature-item';
-        
+
         const displayName = `${feature.category.charAt(0).toUpperCase() + feature.category.slice(1)} (x${feature.count})`;
         const color = feature.visual.color;
-        
+
         featureDiv.innerHTML = `
           <div class="feature-header">
             <span class="feature-name">${displayName}</span>
@@ -176,7 +181,7 @@ describe('UIController', () => {
   describe('Step navigation', () => {
     test('should initialize with step 1', () => {
       const controller = new UIController();
-      
+
       expect(controller.getCurrentStep()).toBe(1);
     });
 
@@ -186,11 +191,11 @@ describe('UIController', () => {
         <div id="step-2">Step 2</div>
         <div id="step-3">Step 3</div>
       `;
-      
+
       const controller = new UIController();
-      
+
       controller.showStep(2);
-      
+
       expect(document.getElementById('step-1').style.display).toBe('none');
       expect(document.getElementById('step-2').style.display).toBe('block');
       expect(document.getElementById('step-3').style.display).toBe('none');
@@ -199,7 +204,7 @@ describe('UIController', () => {
 
     test('should get correct step IDs', () => {
       const controller = new UIController();
-      
+
       expect(controller.getStepId(1)).toBe('step-1');
       expect(controller.getStepId(2)).toBe('step-2');
       expect(controller.getStepId(3)).toBe('step-3');
@@ -210,27 +215,31 @@ describe('UIController', () => {
   describe('Puzzle title management', () => {
     test('should update puzzle title', () => {
       document.body.innerHTML = '<h2 id="puzzle-title">Default Title</h2>';
-      
+
       const controller = new UIController();
-      
+
       controller.updatePuzzleTitle('My Test Puzzle');
-      
-      expect(document.getElementById('puzzle-title').textContent).toBe('My Test Puzzle');
+
+      expect(document.getElementById('puzzle-title').textContent).toBe(
+        'My Test Puzzle'
+      );
     });
 
     test('should use default title when none provided', () => {
       document.body.innerHTML = '<h2 id="puzzle-title">Old Title</h2>';
-      
+
       const controller = new UIController();
-      
+
       controller.updatePuzzleTitle(null);
-      
-      expect(document.getElementById('puzzle-title').textContent).toBe('Puzzle Features');
+
+      expect(document.getElementById('puzzle-title').textContent).toBe(
+        'Puzzle Features'
+      );
     });
 
     test('should handle missing title element gracefully', () => {
       const controller = new UIController();
-      
+
       expect(() => controller.updatePuzzleTitle('Test')).not.toThrow();
     });
   });
@@ -238,39 +247,43 @@ describe('UIController', () => {
   describe('Features population', () => {
     test('should populate features list', () => {
       document.body.innerHTML = '<div id="features-list"></div>';
-      
+
       const features = [
         {
           category: 'lines',
           count: 5,
           visual: { color: '#ff0000ff' },
           customizable: {
-            color: { default: '#ff0000ff' }
-          }
-        }
+            color: { default: '#ff0000ff' },
+          },
+        },
       ];
-      
+
       const controller = new UIController();
       controller.populateFeatures(features);
-      
+
       const featuresContainer = document.getElementById('features-list');
       expect(featuresContainer.children.length).toBe(1);
-      expect(featuresContainer.querySelector('.feature-name').textContent).toBe('Lines (x5)');
+      expect(featuresContainer.querySelector('.feature-name').textContent).toBe(
+        'Lines (x5)'
+      );
     });
 
     test('should show message when no features available', () => {
       document.body.innerHTML = '<div id="features-list"></div>';
-      
+
       const controller = new UIController();
       controller.populateFeatures([]);
-      
+
       const featuresContainer = document.getElementById('features-list');
-      expect(featuresContainer.innerHTML).toBe('<p>No customizable features found in this puzzle.</p>');
+      expect(featuresContainer.innerHTML).toBe(
+        '<p>No customizable features found in this puzzle.</p>'
+      );
     });
 
     test('should handle missing features container gracefully', () => {
       const controller = new UIController();
-      
+
       expect(() => controller.populateFeatures([])).not.toThrow();
     });
   });
@@ -282,16 +295,20 @@ describe('UIController', () => {
         count: 3,
         visual: { color: '#00ff00ff' },
         customizable: {
-          color: { default: '#00ff00ff' }
-        }
+          color: { default: '#00ff00ff' },
+        },
       };
-      
+
       const controller = new UIController();
       const element = controller.createFeatureElement(feature, 0);
-      
+
       expect(element.className).toBe('feature-item');
-      expect(element.querySelector('.feature-name').textContent).toBe('Lines (x3)');
-      expect(element.querySelector('.original-line').style.backgroundColor).toBe('rgb(0, 255, 0)');
+      expect(element.querySelector('.feature-name').textContent).toBe(
+        'Lines (x3)'
+      );
+      expect(
+        element.querySelector('.original-line').style.backgroundColor
+      ).toBe('rgb(0, 255, 0)');
     });
 
     test('should create controls for customizable features', () => {
@@ -300,13 +317,13 @@ describe('UIController', () => {
         count: 1,
         visual: { color: '#0000ffff' },
         customizable: {
-          color: { default: '#0000ffff' }
-        }
+          color: { default: '#0000ffff' },
+        },
       };
-      
+
       const controller = new UIController();
       const controls = controller.createFeatureControls(feature, 0);
-      
+
       expect(controls).toContain('type="color"');
       expect(controls).toContain('value="#0000ff"');
     });
@@ -319,11 +336,11 @@ describe('UIController', () => {
           <button type="submit">Load Puzzle</button>
         </form>
       `;
-      
+
       const controller = new UIController();
-      
+
       controller.showLoading('Loading...');
-      
+
       const button = document.querySelector('#puzzle-url-form button');
       expect(button.textContent).toBe('Loading...');
       expect(button.disabled).toBe(true);
@@ -335,11 +352,11 @@ describe('UIController', () => {
           <button type="submit" disabled>Loading...</button>
         </form>
       `;
-      
+
       const controller = new UIController();
-      
+
       controller.resetLoadingState();
-      
+
       const button = document.querySelector('#puzzle-url-form button');
       expect(button.textContent).toBe('Load Puzzle');
       expect(button.disabled).toBe(false);
@@ -351,14 +368,14 @@ describe('UIController', () => {
           <button type="submit" disabled>Loading...</button>
         </form>
       `;
-      
+
       const controller = new UIController();
-      
+
       controller.showError('Test error');
-      
+
       expect(global.alert).toHaveBeenCalledWith('Test error');
       expect(console.error).toHaveBeenCalledWith('Test error');
-      
+
       const button = document.querySelector('#puzzle-url-form button');
       expect(button.disabled).toBe(false);
     });
@@ -367,25 +384,30 @@ describe('UIController', () => {
   describe('URL input management', () => {
     test('should set puzzle URL input', () => {
       document.body.innerHTML = '<input id="puzzle-url" type="url" />';
-      
+
       const controller = new UIController();
-      
+
       controller.setPuzzleUrlInput('https://sudokupad.app/test123');
-      
-      expect(document.getElementById('puzzle-url').value).toBe('https://sudokupad.app/test123');
+
+      expect(document.getElementById('puzzle-url').value).toBe(
+        'https://sudokupad.app/test123'
+      );
     });
 
     test('should get puzzle URL input', () => {
-      document.body.innerHTML = '<input id="puzzle-url" type="url" value="  https://sudokupad.app/test123  " />';
-      
+      document.body.innerHTML =
+        '<input id="puzzle-url" type="url" value="  https://sudokupad.app/test123  " />';
+
       const controller = new UIController();
-      
-      expect(controller.getPuzzleUrlInput()).toBe('https://sudokupad.app/test123');
+
+      expect(controller.getPuzzleUrlInput()).toBe(
+        'https://sudokupad.app/test123'
+      );
     });
 
     test('should return empty string when URL input missing', () => {
       const controller = new UIController();
-      
+
       expect(controller.getPuzzleUrlInput()).toBe('');
     });
   });
@@ -393,14 +415,14 @@ describe('UIController', () => {
   describe('Color conversion', () => {
     test('should convert 8-character hex to 6-character hex', () => {
       const controller = new UIController();
-      
+
       expect(controller.convertToHex6('#ff0000ff')).toBe('#ff0000');
       expect(controller.convertToHex6('#00ff0088')).toBe('#00ff00');
     });
 
     test('should handle invalid hex colors', () => {
       const controller = new UIController();
-      
+
       expect(controller.convertToHex6('invalid')).toBe('invalid');
       expect(controller.convertToHex6('#ff0000')).toBe('#ff0000');
     });

@@ -29,33 +29,35 @@ class ModuleLoader {
    */
   loadModule(relativePath) {
     const fullPath = path.resolve(process.cwd(), relativePath);
-    
+
     if (this.loadedModules.has(fullPath)) {
       return; // Already loaded
     }
 
     try {
       const code = fs.readFileSync(fullPath, 'utf8');
-      
+
       // Create a context that includes our globals and existing global state
       const context = vm.createContext({
         ...this.globals,
         ...global, // Include existing global state from previous modules
       });
-      
+
       // Execute the module code in the context
       vm.runInContext(code, context);
-      
+
       // Copy new globals back to our global scope
       Object.keys(context).forEach(key => {
-        if (!this.globals.hasOwnProperty(key) && typeof context[key] !== 'undefined') {
+        if (
+          !this.globals.hasOwnProperty(key) &&
+          typeof context[key] !== 'undefined'
+        ) {
           global[key] = context[key];
         }
       });
-      
+
       this.loadedModules.add(fullPath);
       console.log(`✓ Loaded module: ${relativePath}`);
-      
     } catch (error) {
       console.error(`✗ Failed to load module ${relativePath}:`, error.message);
       throw error;

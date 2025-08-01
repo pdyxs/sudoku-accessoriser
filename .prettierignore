@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.parcel-cache/
+
+# Coverage reports
+coverage/
+
+# Third-party code
+src/sudokupad/
+
+# Lock files
+package-lock.json
+yarn.lock
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

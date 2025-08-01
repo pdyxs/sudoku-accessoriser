@@ -4,15 +4,18 @@
  * @jest-environment jsdom
  */
 
-const { setupSudokuPadEnvironment, setupSudokuPadMocks } = require('../helpers/sudokupad-setup');
+const {
+  setupSudokuPadEnvironment,
+  setupSudokuPadMocks,
+} = require('../helpers/sudokupad-setup');
 
 describe('SudokuPad Utilities', () => {
   let moduleLoader;
-  
+
   beforeAll(() => {
     // Setup mocks first
     setupSudokuPadMocks();
-    
+
     // Load all the SudokuPad utilities
     moduleLoader = setupSudokuPadEnvironment();
   });
@@ -52,19 +55,19 @@ describe('SudokuPad Utilities', () => {
   describe('PuzzleZipper functionality', () => {
     test('should compress and decompress data correctly', () => {
       const testData = '{"test": "data", "number": 42}';
-      
+
       const zipped = PuzzleZipper.zip(testData);
       expect(zipped).toBeDefined();
       expect(typeof zipped).toBe('string');
       expect(zipped.length).toBeGreaterThan(0);
-      
+
       const unzipped = PuzzleZipper.unzip(zipped);
       expect(unzipped).toBeDefined();
-      
-      // Compare parsed JSON to handle formatting differences  
+
+      // Compare parsed JSON to handle formatting differences
       const originalParsed = JSON.parse(testData);
       const unzippedParsed = JSON.parse(unzipped);
-      
+
       expect(unzippedParsed).toEqual(originalParsed);
     });
 
@@ -72,22 +75,36 @@ describe('SudokuPad Utilities', () => {
       const emptyData = '{}';
       const zipped = PuzzleZipper.zip(emptyData);
       const unzipped = PuzzleZipper.unzip(zipped);
-      
+
       expect(JSON.parse(unzipped)).toEqual({});
     });
 
     test('should handle complex puzzle data', () => {
       const complexData = JSON.stringify({
         lines: [
-          { color: '#ff0000ff', wayPoints: [[1,1], [2,2]] },
-          { color: '#00ff00ff', wayPoints: [[3,3], [4,4]] }
+          {
+            color: '#ff0000ff',
+            wayPoints: [
+              [1, 1],
+              [2, 2],
+            ],
+          },
+          {
+            color: '#00ff00ff',
+            wayPoints: [
+              [3, 3],
+              [4, 4],
+            ],
+          },
         ],
-        grid: Array(9).fill().map(() => Array(9).fill(0))
+        grid: Array(9)
+          .fill()
+          .map(() => Array(9).fill(0)),
       });
-      
+
       const zipped = PuzzleZipper.zip(complexData);
       const unzipped = PuzzleZipper.unzip(zipped);
-      
+
       expect(JSON.parse(unzipped)).toEqual(JSON.parse(complexData));
     });
   });
@@ -95,31 +112,37 @@ describe('SudokuPad Utilities', () => {
   describe('PuzzleLoader functionality', () => {
     test('should generate correct API URLs', () => {
       const testId = 'psxczr0jpr';
-      
+
       // Test the URL generation functions
       const localUrl = PuzzleLoader.apiPuzzleUrlLocal(testId);
       const legacyUrl = PuzzleLoader.apiPuzzleUrlLegacy(testId);
       const proxyUrl = PuzzleLoader.apiPuzzleUrlLegacyProxy(testId);
-      
+
       expect(localUrl).toBe(`https://sudokupad.app/api/puzzle/${testId}`);
-      expect(legacyUrl).toBe(`https://firebasestorage.googleapis.com/v0/b/sudoku-sandbox.appspot.com/o/${encodeURIComponent(testId)}?alt=media`);
-      expect(proxyUrl).toBe(`https://sudokupad.svencodes.com/ctclegacy/${encodeURIComponent(testId)}`);
+      expect(legacyUrl).toBe(
+        `https://firebasestorage.googleapis.com/v0/b/sudoku-sandbox.appspot.com/o/${encodeURIComponent(testId)}?alt=media`
+      );
+      expect(proxyUrl).toBe(
+        `https://sudokupad.svencodes.com/ctclegacy/${encodeURIComponent(testId)}`
+      );
     });
 
     test('should handle URL encoding correctly', () => {
       const testId = 'pdyxs/whispers-in-the-mist';
       const encodedId = encodeURIComponent(testId);
-      
+
       const localUrl = PuzzleLoader.apiPuzzleUrlLocal(testId);
-      expect(localUrl).toBe(`https://sudokupad.app/api/puzzle/pdyxs/whispers-in-the-mist`);
-      
+      expect(localUrl).toBe('https://sudokupad.app/api/puzzle/pdyxs/whispers-in-the-mist');
+
       const legacyUrl = PuzzleLoader.apiPuzzleUrlLegacy(testId);
       expect(legacyUrl).toContain(encodedId);
     });
 
     test('should identify remote puzzle IDs', () => {
       expect(PuzzleLoader.isRemotePuzzleId('psxczr0jpr')).toBe(true);
-      expect(PuzzleLoader.isRemotePuzzleId('pdyxs/whispers-in-the-mist')).toBe(true);
+      expect(PuzzleLoader.isRemotePuzzleId('pdyxs/whispers-in-the-mist')).toBe(
+        true
+      );
       expect(PuzzleLoader.isRemotePuzzleId('fpuzzABC123')).toBe(false); // F-puzzle format
     });
   });
@@ -129,7 +152,7 @@ describe('SudokuPad Utilities', () => {
       // Test basic cell index calculations (9x9 grid)
       const index = PuzzleTools.getCellIndex(0, 0);
       expect(index).toBe(0);
-      
+
       const position = PuzzleTools.getCellPosition(0);
       expect(position).toEqual([0, 0]);
     });
@@ -138,19 +161,24 @@ describe('SudokuPad Utilities', () => {
       // Test different positions
       const middleIndex = PuzzleTools.getCellIndex(4, 4); // Center of 9x9 grid
       const middlePosition = PuzzleTools.getCellPosition(middleIndex);
-      
+
       expect(middlePosition[0]).toBe(4);
       expect(middlePosition[1]).toBe(4);
     });
 
     test('should provide consistent index/position conversion', () => {
       // Test round-trip conversion for several positions
-      const testPositions = [[0,0], [1,3], [5,7], [8,8]];
-      
+      const testPositions = [
+        [0, 0],
+        [1, 3],
+        [5, 7],
+        [8, 8],
+      ];
+
       testPositions.forEach(([row, col]) => {
         const index = PuzzleTools.getCellIndex(row, col);
         const backToPosition = PuzzleTools.getCellPosition(index);
-        
+
         expect(backToPosition).toEqual([row, col]);
       });
     });

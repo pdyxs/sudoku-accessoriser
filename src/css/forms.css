@@ -1,0 +1,99 @@
+/* Forms and Input Components */
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: border-color 0.3s ease;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: var(--border-hover);
+}
+
+/* Input validation states */
+.input-group input.valid {
+  border-color: #27ae60;
+  box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+}
+
+.input-group input.invalid {
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+}
+
+.input-group input.validating {
+  border-color: #f39c12;
+}
+
+.input-feedback {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  min-height: 20px;
+  transition: all 0.3s ease;
+}
+
+.input-feedback.success {
+  color: #27ae60;
+}
+
+.input-feedback.error {
+  color: #e74c3c;
+}
+
+.input-feedback.warning {
+  color: #f39c12;
+}
+
+.input-feedback.info {
+  color: var(--text-secondary);
+}
+
+.input-feedback:empty {
+  display: none;
+}
+
+.validation-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.validation-icon.show {
+  opacity: 1;
+}
+
+.validation-icon.success {
+  color: #27ae60;
+}
+
+.validation-icon.error {
+  color: #e74c3c;
+}
+
+.validation-icon.validating {
+  color: #f39c12;
+}
+
+.input-wrapper {
+  position: relative;
+}

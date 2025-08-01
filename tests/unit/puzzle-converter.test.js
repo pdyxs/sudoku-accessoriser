@@ -4,18 +4,27 @@
  * @jest-environment jsdom
  */
 
-const { setupSudokuPadEnvironment, setupSudokuPadMocks } = require('../helpers/sudokupad-setup');
-const { setupSudokuPadAPIMock, addMockPuzzle } = require('../__mocks__/sudokupad-api');
-const { SAMPLE_PUZZLE_URL, SAMPLE_CUSTOM_URL } = require('../fixtures/sample-puzzles');
+const {
+  setupSudokuPadEnvironment,
+  setupSudokuPadMocks,
+} = require('../helpers/sudokupad-setup');
+const {
+  setupSudokuPadAPIMock,
+  addMockPuzzle,
+} = require('../__mocks__/sudokupad-api');
+const {
+  SAMPLE_PUZZLE_URL,
+  SAMPLE_CUSTOM_URL,
+} = require('../fixtures/sample-puzzles');
 
 describe('PuzzleConverter', () => {
   let moduleLoader;
-  
+
   beforeAll(() => {
     // Setup mocks first
     setupSudokuPadMocks();
     setupSudokuPadAPIMock();
-    
+
     // Load all the SudokuPad utilities and PuzzleConverter
     moduleLoader = setupSudokuPadEnvironment();
   });
@@ -24,13 +33,15 @@ describe('PuzzleConverter', () => {
     test('should identify valid SudokuPad URLs', () => {
       // Check that PuzzleConverter was loaded
       expect(global.PuzzleConverter).toBeDefined();
-      expect(typeof global.PuzzleConverter.isValidSudokuPadUrl).toBe('function');
-      
+      expect(typeof global.PuzzleConverter.isValidSudokuPadUrl).toBe(
+        'function'
+      );
+
       const validUrls = [
         'https://sudokupad.app/psxczr0jpr',
         'https://sudokupad.app/pdyxs/whispers-in-the-mist',
         'https://sudokupad.app/scf?puzzleid=sclABC123',
-        'http://sudokupad.app/test123'
+        'http://sudokupad.app/test123',
       ];
 
       validUrls.forEach(url => {
@@ -60,7 +71,9 @@ describe('PuzzleConverter', () => {
 
     test('should extract custom puzzle IDs', () => {
       const url = 'https://sudokupad.app/pdyxs/whispers-in-the-mist';
-      expect(PuzzleConverter.extractPuzzleId(url)).toBe('pdyxs/whispers-in-the-mist');
+      expect(PuzzleConverter.extractPuzzleId(url)).toBe(
+        'pdyxs/whispers-in-the-mist'
+      );
     });
 
     test('should handle SCL format URLs', () => {
@@ -78,9 +91,9 @@ describe('PuzzleConverter', () => {
         'https://example.com/puzzle',
         'not-a-url',
         '',
-        'https://sudokupad.com/wrong-domain'
+        'https://sudokupad.com/wrong-domain',
       ];
-      
+
       invalidUrls.forEach(url => {
         expect(PuzzleConverter.extractPuzzleId(url)).toBeNull();
       });
@@ -96,9 +109,9 @@ describe('PuzzleConverter', () => {
 
     test('should convert valid puzzle URL to data', async () => {
       const url = SAMPLE_PUZZLE_URL; // 'https://sudokupad.app/psxczr0jpr'
-      
+
       const result = await PuzzleConverter.convertSudokuPadUrl(url);
-      
+
       expect(result).toHaveProperty('title');
       expect(result).toHaveProperty('puzzleId');
       expect(result).toHaveProperty('originalData');
@@ -108,9 +121,9 @@ describe('PuzzleConverter', () => {
 
     test('should handle custom URLs', async () => {
       const url = SAMPLE_CUSTOM_URL; // 'https://sudokupad.app/pdyxs/whispers-in-the-mist'
-      
+
       const result = await PuzzleConverter.convertSudokuPadUrl(url);
-      
+
       expect(result).toHaveProperty('title');
       expect(result).toHaveProperty('puzzleId', 'pdyxs/whispers-in-the-mist');
       expect(result).toHaveProperty('originalData');
@@ -118,7 +131,7 @@ describe('PuzzleConverter', () => {
 
     test('should handle API errors gracefully', async () => {
       const invalidUrl = 'https://sudokupad.app/nonexistent-puzzle';
-      
+
       await expect(
         PuzzleConverter.convertSudokuPadUrl(invalidUrl)
       ).rejects.toThrow();
@@ -126,7 +139,7 @@ describe('PuzzleConverter', () => {
 
     test('should handle invalid URL format', async () => {
       const invalidUrl = 'https://example.com/not-a-sudokupad-url';
-      
+
       await expect(
         PuzzleConverter.convertSudokuPadUrl(invalidUrl)
       ).rejects.toThrow('Invalid SudokuPad URL format');
@@ -138,15 +151,38 @@ describe('PuzzleConverter', () => {
         title: 'Feature Test Puzzle',
         data: {
           lines: [
-            { color: '#ff0000ff', thickness: 2, wayPoints: [[1,1], [2,2]] },
-            { color: '#ff0000ff', thickness: 2, wayPoints: [[3,3], [4,4]] },
-            { color: '#00ff00ff', thickness: 1, wayPoints: [[5,5], [6,6]] }
-          ]
-        }
+            {
+              color: '#ff0000ff',
+              thickness: 2,
+              wayPoints: [
+                [1, 1],
+                [2, 2],
+              ],
+            },
+            {
+              color: '#ff0000ff',
+              thickness: 2,
+              wayPoints: [
+                [3, 3],
+                [4, 4],
+              ],
+            },
+            {
+              color: '#00ff00ff',
+              thickness: 1,
+              wayPoints: [
+                [5, 5],
+                [6, 6],
+              ],
+            },
+          ],
+        },
       });
-      
-      const result = await PuzzleConverter.convertSudokuPadUrl('https://sudokupad.app/test-features');
-      
+
+      const result = await PuzzleConverter.convertSudokuPadUrl(
+        'https://sudokupad.app/test-features'
+      );
+
       expect(result.features).toBeDefined();
       expect(Array.isArray(result.features)).toBe(true);
       if (result.features.length > 0) {

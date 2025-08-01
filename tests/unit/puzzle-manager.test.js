@@ -11,7 +11,7 @@ describe('PuzzleManager', () => {
     global.PuzzleConverter = {
       isValidSudokuPadUrl: jest.fn(),
       convertSudokuPadUrl: jest.fn(),
-      extractPuzzleId: jest.fn()
+      extractPuzzleId: jest.fn(),
     };
 
     // Define PuzzleManager class for testing
@@ -22,15 +22,16 @@ describe('PuzzleManager', () => {
 
       async extractPuzzleData(puzzleUrl) {
         try {
-          const puzzleData = await global.PuzzleConverter.convertSudokuPadUrl(puzzleUrl);
-          
+          const puzzleData =
+            await global.PuzzleConverter.convertSudokuPadUrl(puzzleUrl);
+
           return {
             title: puzzleData.title,
             puzzleId: puzzleData.puzzleId,
             originalData: puzzleData.originalData,
             features: puzzleData.features,
             totalLines: puzzleData.totalLines,
-            featureGroups: puzzleData.featureGroups
+            featureGroups: puzzleData.featureGroups,
           };
         } catch (error) {
           throw new Error(`Failed to extract puzzle data: ${error.message}`);
@@ -42,14 +43,17 @@ describe('PuzzleManager', () => {
       }
 
       normalizePuzzleUrl(puzzleParam) {
-        if (puzzleParam.startsWith('http://') || puzzleParam.startsWith('https://')) {
+        if (
+          puzzleParam.startsWith('http://') ||
+          puzzleParam.startsWith('https://')
+        ) {
           return puzzleParam;
         }
-        
+
         if (puzzleParam.includes('/')) {
           return `https://sudokupad.app/${puzzleParam}`;
         }
-        
+
         return `https://sudokupad.app/${puzzleParam}`;
       }
 
@@ -78,7 +82,7 @@ describe('PuzzleManager', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Mock history.pushState
     window.history.pushState = jest.fn();
   });
@@ -88,9 +92,13 @@ describe('PuzzleManager', () => {
       const manager = new PuzzleManager();
       global.PuzzleConverter.isValidSudokuPadUrl.mockReturnValue(true);
 
-      const result = manager.isValidSudokuPadUrl('https://sudokupad.app/test123');
+      const result = manager.isValidSudokuPadUrl(
+        'https://sudokupad.app/test123'
+      );
 
-      expect(global.PuzzleConverter.isValidSudokuPadUrl).toHaveBeenCalledWith('https://sudokupad.app/test123');
+      expect(global.PuzzleConverter.isValidSudokuPadUrl).toHaveBeenCalledWith(
+        'https://sudokupad.app/test123'
+      );
       expect(result).toBe(true);
     });
   });
@@ -104,57 +112,74 @@ describe('PuzzleManager', () => {
         originalData: { lines: [] },
         features: [],
         totalLines: 0,
-        featureGroups: []
+        featureGroups: [],
       };
 
-      global.PuzzleConverter.convertSudokuPadUrl.mockResolvedValue(mockPuzzleData);
+      global.PuzzleConverter.convertSudokuPadUrl.mockResolvedValue(
+        mockPuzzleData
+      );
 
-      const result = await manager.extractPuzzleData('https://sudokupad.app/test123');
+      const result = await manager.extractPuzzleData(
+        'https://sudokupad.app/test123'
+      );
 
-      expect(global.PuzzleConverter.convertSudokuPadUrl).toHaveBeenCalledWith('https://sudokupad.app/test123');
+      expect(global.PuzzleConverter.convertSudokuPadUrl).toHaveBeenCalledWith(
+        'https://sudokupad.app/test123'
+      );
       expect(result).toEqual(mockPuzzleData);
     });
 
     test('should handle extraction errors', async () => {
       const manager = new PuzzleManager();
-      global.PuzzleConverter.convertSudokuPadUrl.mockRejectedValue(new Error('Network error'));
+      global.PuzzleConverter.convertSudokuPadUrl.mockRejectedValue(
+        new Error('Network error')
+      );
 
-      await expect(manager.extractPuzzleData('https://sudokupad.app/test123'))
-        .rejects.toThrow('Failed to extract puzzle data: Network error');
+      await expect(
+        manager.extractPuzzleData('https://sudokupad.app/test123')
+      ).rejects.toThrow('Failed to extract puzzle data: Network error');
     });
   });
 
   describe('URL normalization', () => {
     test('should return full URLs as-is', () => {
       const manager = new PuzzleManager();
-      
-      expect(manager.normalizePuzzleUrl('https://sudokupad.app/test123')).toBe('https://sudokupad.app/test123');
-      expect(manager.normalizePuzzleUrl('http://sudokupad.app/test123')).toBe('http://sudokupad.app/test123');
+
+      expect(manager.normalizePuzzleUrl('https://sudokupad.app/test123')).toBe(
+        'https://sudokupad.app/test123'
+      );
+      expect(manager.normalizePuzzleUrl('http://sudokupad.app/test123')).toBe(
+        'http://sudokupad.app/test123'
+      );
     });
 
     test('should handle custom puzzle URLs with slashes', () => {
       const manager = new PuzzleManager();
-      
-      expect(manager.normalizePuzzleUrl('author/puzzle-name')).toBe('https://sudokupad.app/author/puzzle-name');
+
+      expect(manager.normalizePuzzleUrl('author/puzzle-name')).toBe(
+        'https://sudokupad.app/author/puzzle-name'
+      );
     });
 
     test('should handle simple puzzle IDs', () => {
       const manager = new PuzzleManager();
-      
-      expect(manager.normalizePuzzleUrl('test123')).toBe('https://sudokupad.app/test123');
+
+      expect(manager.normalizePuzzleUrl('test123')).toBe(
+        'https://sudokupad.app/test123'
+      );
     });
   });
 
   describe('URL parameter management', () => {
     test('should get URL parameters', () => {
       const manager = new PuzzleManager();
-      
+
       // Mock the getUrlParameter method directly for this test
-      const mockGetUrlParameter = jest.fn((name) => {
+      const mockGetUrlParameter = jest.fn(name => {
         const params = { puzzle: 'test123', other: 'value' };
         return params[name] || null;
       });
-      
+
       manager.getUrlParameter = mockGetUrlParameter;
 
       expect(manager.getUrlParameter('puzzle')).toBe('test123');
@@ -167,17 +192,20 @@ describe('PuzzleManager', () => {
       const mockURL = {
         searchParams: {
           set: jest.fn(),
-          delete: jest.fn()
-        }
+          delete: jest.fn(),
+        },
       };
-      
+
       global.URL = jest.fn(() => mockURL);
-      
+
       const manager = new PuzzleManager();
 
       manager.updateUrlParameter('puzzle', 'test123');
 
-      expect(mockURL.searchParams.set).toHaveBeenCalledWith('puzzle', 'test123');
+      expect(mockURL.searchParams.set).toHaveBeenCalledWith(
+        'puzzle',
+        'test123'
+      );
       expect(window.history.pushState).toHaveBeenCalledWith({}, '', mockURL);
     });
 
@@ -186,12 +214,12 @@ describe('PuzzleManager', () => {
       const mockURL = {
         searchParams: {
           set: jest.fn(),
-          delete: jest.fn()
-        }
+          delete: jest.fn(),
+        },
       };
-      
+
       global.URL = jest.fn(() => mockURL);
-      
+
       const manager = new PuzzleManager();
 
       manager.updateUrlParameter('puzzle', null);
@@ -202,9 +230,9 @@ describe('PuzzleManager', () => {
 
     test('should check for puzzle parameter', () => {
       const manager = new PuzzleManager();
-      
+
       // Mock the getUrlParameter method that checkForPuzzleParameter calls
-      manager.getUrlParameter = jest.fn((name) => {
+      manager.getUrlParameter = jest.fn(name => {
         return name === 'puzzle' ? 'test123' : null;
       });
 

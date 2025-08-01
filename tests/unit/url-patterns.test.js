@@ -6,45 +6,46 @@
 
 describe('SudokuPad URL Patterns', () => {
   // The regex from the reference repository (same as in puzzle-converter.js)
-  const reCtc = /(?:^\s*(http[s]?:\/\/)?(app.crackingthecryptic.com|([a-z]+\.)?sudokupad.app))(?:\/sudoku(?:\.html)?)?\/?(?:\?puzzleid=)?(?<puzzleid>.+)/;
-  
+  const reCtc =
+    /(?:^\s*(http[s]?:\/\/)?(app.crackingthecryptic.com|([a-z]+\.)?sudokupad.app))(?:\/sudoku(?:\.html)?)?\/?(?:\?puzzleid=)?(?<puzzleid>.+)/;
+
   // Test URLs from the original HTML test
   const validTestUrls = [
     {
       url: 'https://sudokupad.app/psxczr0jpr',
-      expectedPuzzleId: 'psxczr0jpr'
+      expectedPuzzleId: 'psxczr0jpr',
     },
     {
-      url: 'https://sudokupad.app/pdyxs/whispers-in-the-mist', 
-      expectedPuzzleId: 'pdyxs/whispers-in-the-mist'
+      url: 'https://sudokupad.app/pdyxs/whispers-in-the-mist',
+      expectedPuzzleId: 'pdyxs/whispers-in-the-mist',
     },
     {
       url: 'https://www.sudokupad.app/username/puzzle-name',
-      expectedPuzzleId: 'username/puzzle-name'
+      expectedPuzzleId: 'username/puzzle-name',
     },
     {
       url: 'https://beta.sudokupad.app/test123',
-      expectedPuzzleId: 'test123'
+      expectedPuzzleId: 'test123',
     },
     {
       url: 'sudokupad.app/short-form',
-      expectedPuzzleId: 'short-form'
+      expectedPuzzleId: 'short-form',
     },
     {
       url: 'https://sudokupad.app/sudoku.html?puzzleid=abc123',
-      expectedPuzzleId: 'abc123'
+      expectedPuzzleId: 'abc123',
     },
     {
       url: 'https://sudokupad.app/sudoku/?puzzleid=def456',
-      expectedPuzzleId: 'def456'
-    }
+      expectedPuzzleId: 'def456',
+    },
   ];
 
   describe('Valid URL Pattern Matching', () => {
     validTestUrls.forEach(({ url, expectedPuzzleId }) => {
       test(`should extract puzzle ID from: ${url}`, () => {
         const match = url.match(reCtc);
-        
+
         expect(match).not.toBeNull();
         expect(match.groups).toBeDefined();
         expect(match.groups.puzzleid).toBe(expectedPuzzleId);
@@ -56,10 +57,10 @@ describe('SudokuPad URL Patterns', () => {
     test('should handle HTTP vs HTTPS', () => {
       const httpUrl = 'http://sudokupad.app/test123';
       const httpsUrl = 'https://sudokupad.app/test123';
-      
+
       const httpMatch = httpUrl.match(reCtc);
       const httpsMatch = httpsUrl.match(reCtc);
-      
+
       expect(httpMatch).not.toBeNull();
       expect(httpsMatch).not.toBeNull();
       expect(httpMatch.groups.puzzleid).toBe('test123');
@@ -70,9 +71,9 @@ describe('SudokuPad URL Patterns', () => {
       const subdomainUrls = [
         'https://beta.sudokupad.app/test123',
         'https://dev.sudokupad.app/test456',
-        'https://staging.sudokupad.app/test789'
+        'https://staging.sudokupad.app/test789',
       ];
-      
+
       subdomainUrls.forEach(url => {
         const match = url.match(reCtc);
         expect(match).not.toBeNull();
@@ -84,18 +85,18 @@ describe('SudokuPad URL Patterns', () => {
       const pathFormats = [
         {
           url: 'https://sudokupad.app/sudoku.html?puzzleid=legacy123',
-          expectedId: 'legacy123'
+          expectedId: 'legacy123',
         },
         {
           url: 'https://sudokupad.app/sudoku/?puzzleid=query456',
-          expectedId: 'query456'
+          expectedId: 'query456',
         },
         {
           url: 'https://sudokupad.app/direct789',
-          expectedId: 'direct789'
-        }
+          expectedId: 'direct789',
+        },
       ];
-      
+
       pathFormats.forEach(({ url, expectedId }) => {
         const match = url.match(reCtc);
         expect(match).not.toBeNull();
@@ -106,7 +107,7 @@ describe('SudokuPad URL Patterns', () => {
     test('should handle CTC domain', () => {
       const ctcUrl = 'https://app.crackingthecryptic.com/puzzle123';
       const match = ctcUrl.match(reCtc);
-      
+
       expect(match).not.toBeNull();
       expect(match.groups.puzzleid).toBe('puzzle123');
     });
@@ -114,9 +115,9 @@ describe('SudokuPad URL Patterns', () => {
     test('should handle URLs without protocol', () => {
       const noProtocolUrls = [
         'sudokupad.app/test123',
-        'www.sudokupad.app/test456'
+        'www.sudokupad.app/test456',
       ];
-      
+
       noProtocolUrls.forEach(url => {
         const match = url.match(reCtc);
         expect(match).not.toBeNull();
@@ -133,13 +134,13 @@ describe('SudokuPad URL Patterns', () => {
       '',
       'not-a-url-at-all',
       'https://sudokupad.app/', // Empty puzzle ID
-      'ftp://sudokupad.app/test123' // Wrong protocol
+      'ftp://sudokupad.app/test123', // Wrong protocol
     ];
 
     invalidUrls.forEach(url => {
       test(`should reject invalid URL: ${url || '(empty)'}`, () => {
         const match = url.match(reCtc);
-        
+
         if (url === 'https://sudokupad.app/') {
           // This might match but with puzzleid being just the slash
           if (match) {
@@ -157,18 +158,18 @@ describe('SudokuPad URL Patterns', () => {
       const specialCharUrls = [
         {
           url: 'https://sudokupad.app/user123/my-awesome-puzzle',
-          expectedId: 'user123/my-awesome-puzzle'
+          expectedId: 'user123/my-awesome-puzzle',
         },
         {
           url: 'https://sudokupad.app/puzzle_with_underscores',
-          expectedId: 'puzzle_with_underscores'
+          expectedId: 'puzzle_with_underscores',
         },
         {
           url: 'https://sudokupad.app/puzzle.with.dots',
-          expectedId: 'puzzle.with.dots'
-        }
+          expectedId: 'puzzle.with.dots',
+        },
       ];
-      
+
       specialCharUrls.forEach(({ url, expectedId }) => {
         const match = url.match(reCtc);
         expect(match).not.toBeNull();
@@ -177,9 +178,10 @@ describe('SudokuPad URL Patterns', () => {
     });
 
     test('should handle very long puzzle IDs', () => {
-      const longId = 'this-is-a-very-long-puzzle-id-that-contains-many-words-and-should-still-work';
+      const longId =
+        'this-is-a-very-long-puzzle-id-that-contains-many-words-and-should-still-work';
       const url = `https://sudokupad.app/${longId}`;
-      
+
       const match = url.match(reCtc);
       expect(match).not.toBeNull();
       expect(match.groups.puzzleid).toBe(longId);
@@ -189,9 +191,9 @@ describe('SudokuPad URL Patterns', () => {
       const mixedCaseUrls = [
         'https://sudokupad.app/Puzzle123ABC',
         'https://sudokupad.app/mixedCASE456def',
-        'https://sudokupad.app/User789/PuzzleName'
+        'https://sudokupad.app/User789/PuzzleName',
       ];
-      
+
       mixedCaseUrls.forEach(url => {
         const match = url.match(reCtc);
         expect(match).not.toBeNull();
@@ -203,9 +205,10 @@ describe('SudokuPad URL Patterns', () => {
 
   describe('Query Parameters and Fragments', () => {
     test('should handle additional query parameters', () => {
-      const urlWithQuery = 'https://sudokupad.app/test123?settings=abc&theme=dark';
+      const urlWithQuery =
+        'https://sudokupad.app/test123?settings=abc&theme=dark';
       const match = urlWithQuery.match(reCtc);
-      
+
       expect(match).not.toBeNull();
       expect(match.groups.puzzleid).toBe('test123?settings=abc&theme=dark');
     });
@@ -213,7 +216,7 @@ describe('SudokuPad URL Patterns', () => {
     test('should handle URL fragments', () => {
       const urlWithFragment = 'https://sudokupad.app/test123#section1';
       const match = urlWithFragment.match(reCtc);
-      
+
       expect(match).not.toBeNull();
       expect(match.groups.puzzleid).toBe('test123#section1');
     });

@@ -1,0 +1,48 @@
+/* Buttons and Interactive Elements */
+button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow-hover);
+}
+
+.primary-btn,
+button[type="submit"] {
+  background: var(--button-primary);
+  color: white;
+}
+
+.primary-btn:hover,
+button[type="submit"]:hover {
+  background: var(--button-primary-hover);
+}
+
+.secondary-btn {
+  background: var(--button-secondary);
+  color: white;
+  margin-right: 10px;
+}
+
+.secondary-btn:hover {
+  background: var(--button-secondary-hover);
+}
+
+.version {
+  display: inline-block;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: var(--bg-primary);
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid var(--border-color);
+  margin-top: 4px;
+  font-family: monospace;
+}

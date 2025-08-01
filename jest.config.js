@@ -18,13 +18,25 @@ module.exports = {
     '!**/node_modules/**'
   ],
   
+  // Coverage reporters
+  coverageReporters: [
+    'text',
+    'text-summary', 
+    'html',
+    'lcov',
+    'json'
+  ],
+  
+  // Coverage directory
+  coverageDirectory: 'coverage',
+  
   // Coverage thresholds
   coverageThreshold: {
     global: {
-      branches: 70,
-      functions: 70,
-      lines: 70,
-      statements: 70
+      branches: 75,
+      functions: 80,
+      lines: 80,
+      statements: 80
     }
   },
   
